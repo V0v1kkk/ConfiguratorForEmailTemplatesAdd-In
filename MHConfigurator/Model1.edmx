@@ -1,0 +1,290 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="Хранилище baseModel" Provider="System.Data.SQLite.EF6" ProviderManifestToken="data source=&quot;C:\Users\Владимир\AppData\Local\Mass helper\base.sqlite3&quot;" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Generated">
+          <Key>
+            <PropertyRef Name="Index" />
+          </Key>
+          <Property Name="Index" Type="integer" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="Label" Type="nvarchar" MaxLength="2147483647" />
+          <Property Name="ParentName" Type="nvarchar" MaxLength="2147483647" />
+          <Property Name="IsButton" Type="bit" Nullable="false" />
+          <Property Name="IsMenu" Type="bit" Nullable="false" />
+          <Property Name="IsSeparator" Type="bit" Nullable="false" />
+          <Property Name="IsGroup" Type="bit" Nullable="false" />
+          <Property Name="Image" Type="nvarchar" MaxLength="2147483647" />
+          <Property Name="SuperTip" Type="nvarchar" MaxLength="2147483647" />
+          <Property Name="ScreenTip" Type="nvarchar" MaxLength="2147483647" />
+          <Property Name="TemplateNO" Type="integer" />
+        </EntityType>
+        <EntityType Name="MailPropertys">
+          <Key>
+            <PropertyRef Name="ButtonID" />
+          </Key>
+          <Property Name="ButtonID" Type="integer" Nullable="false" />
+          <Property Name="Description" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="Only6565" Type="bit" Nullable="false" />
+          <Property Name="Only6690" Type="bit" Nullable="false" />
+          <Property Name="FillTO" Type="bit" Nullable="false" />
+          <Property Name="TO" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="FillCopy" Type="bit" Nullable="false" />
+          <Property Name="Copy" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="FillHideCopy" Type="bit" Nullable="false" />
+          <Property Name="HideCopy" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="FillSubject" Type="bit" Nullable="false" />
+          <Property Name="Subject" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="HighImportance" Type="bit" Nullable="false" />
+          <Property Name="Reminder" Type="bit" Nullable="false" />
+          <Property Name="ReminderTime" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="FillBody" Type="bit" Nullable="false" />
+          <Property Name="BodyID" Type="integer" Nullable="false" />
+          <Property Name="Zametka1" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="Zametka2" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="Zametka3" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+        </EntityType>
+        <EntityType Name="MailsTemplates">
+          <Key>
+            <PropertyRef Name="Templateid" />
+          </Key>
+          <Property Name="Templateid" Type="integer" Nullable="false" />
+          <Property Name="Templadescription" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="TemplateBody" Type="blob" />
+        </EntityType>
+        <!--Ошибки, обнаруженные при создании:
+предупреждение 6002: В таблице или представлении "main.WorkTime" не определен первичный ключ. Ключ был выведен, а определение таблицы или представления было создано в режиме только для чтения.-->
+        <EntityType Name="WorkTime">
+          <Key>
+            <PropertyRef Name="RegionOrTT" />
+            <PropertyRef Name="TT" />
+            <PropertyRef Name="OpenTime" />
+            <PropertyRef Name="CloseTime" />
+            <PropertyRef Name="Email" />
+          </Key>
+          <Property Name="RegionOrTT" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="TT" Type="bit" Nullable="false" />
+          <Property Name="OpenTime" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="CloseTime" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="Email" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_MailPropertys_0_0">
+          <End Role="MailsTemplates" Type="Self.MailsTemplates" Multiplicity="1" />
+          <End Role="MailPropertys" Type="Self.MailPropertys" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MailsTemplates">
+              <PropertyRef Name="Templateid" />
+            </Principal>
+            <Dependent Role="MailPropertys">
+              <PropertyRef Name="BodyID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="Хранилище baseModelContainer">
+          <EntitySet Name="Generated" EntityType="Self.Generated" store:Type="Tables" />
+          <EntitySet Name="MailPropertys" EntityType="Self.MailPropertys" store:Type="Tables" />
+          <EntitySet Name="MailsTemplates" EntityType="Self.MailsTemplates" store:Type="Tables" />
+          <EntitySet Name="WorkTime" EntityType="Self.WorkTime" store:Type="Tables">
+            <DefiningQuery>SELECT 
+[WorkTime].[RegionOrTT] AS [RegionOrTT], 
+[WorkTime].[TT] AS [TT], 
+[WorkTime].[OpenTime] AS [OpenTime], 
+[WorkTime].[CloseTime] AS [CloseTime], 
+[WorkTime].[Email] AS [Email]
+FROM [WorkTime] AS [WorkTime]</DefiningQuery>
+          </EntitySet>
+          <AssociationSet Name="FK_MailPropertys_0_0" Association="Self.FK_MailPropertys_0_0">
+            <End Role="MailsTemplates" EntitySet="MailsTemplates" />
+            <End Role="MailPropertys" EntitySet="MailPropertys" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="baseModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="Generated">
+          <Key>
+            <PropertyRef Name="Index" />
+          </Key>
+          <Property Name="Index" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Label" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Name="ParentName" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Name="IsButton" Type="Boolean" Nullable="false" />
+          <Property Name="IsMenu" Type="Boolean" Nullable="false" />
+          <Property Name="IsSeparator" Type="Boolean" Nullable="false" />
+          <Property Name="IsGroup" Type="Boolean" Nullable="false" />
+          <Property Name="Image" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Name="SuperTip" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Name="ScreenTip" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Name="TemplateNO" Type="Int64" />
+        </EntityType>
+        <EntityType Name="MailPropertys">
+          <Key>
+            <PropertyRef Name="ButtonID" />
+          </Key>
+          <Property Name="ButtonID" Type="Int64" Nullable="false" />
+          <Property Name="Description" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Only6565" Type="Boolean" Nullable="false" />
+          <Property Name="Only6690" Type="Boolean" Nullable="false" />
+          <Property Name="FillTO" Type="Boolean" Nullable="false" />
+          <Property Name="TO" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="FillCopy" Type="Boolean" Nullable="false" />
+          <Property Name="Copy" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="FillHideCopy" Type="Boolean" Nullable="false" />
+          <Property Name="HideCopy" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="FillSubject" Type="Boolean" Nullable="false" />
+          <Property Name="Subject" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="HighImportance" Type="Boolean" Nullable="false" />
+          <Property Name="Reminder" Type="Boolean" Nullable="false" />
+          <Property Name="ReminderTime" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="FillBody" Type="Boolean" Nullable="false" />
+          <Property Name="BodyID" Type="Int64" Nullable="false" />
+          <Property Name="Zametka1" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Zametka2" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Zametka3" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="MailsTemplates" Relationship="Self.FK_MailPropertys_0_0" FromRole="MailPropertys" ToRole="MailsTemplates" />
+        </EntityType>
+        <EntityType Name="MailsTemplates">
+          <Key>
+            <PropertyRef Name="Templateid" />
+          </Key>
+          <Property Name="Templateid" Type="Int64" Nullable="false" />
+          <Property Name="Templadescription" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="TemplateBody" Type="Binary" MaxLength="2147483647" FixedLength="false" />
+          <NavigationProperty Name="MailPropertys" Relationship="Self.FK_MailPropertys_0_0" FromRole="MailsTemplates" ToRole="MailPropertys" />
+        </EntityType>
+        <EntityType Name="WorkTime">
+          <Key>
+            <PropertyRef Name="RegionOrTT" />
+            <PropertyRef Name="TT" />
+            <PropertyRef Name="OpenTime" />
+            <PropertyRef Name="CloseTime" />
+            <PropertyRef Name="Email" />
+          </Key>
+          <Property Name="RegionOrTT" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="TT" Type="Boolean" Nullable="false" />
+          <Property Name="OpenTime" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="CloseTime" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Email" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_MailPropertys_0_0">
+          <End Role="MailsTemplates" Type="Self.MailsTemplates" Multiplicity="1" />
+          <End Role="MailPropertys" Type="Self.MailPropertys" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MailsTemplates">
+              <PropertyRef Name="Templateid" />
+            </Principal>
+            <Dependent Role="MailPropertys">
+              <PropertyRef Name="BodyID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="baseEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Generated" EntityType="Self.Generated" />
+          <EntitySet Name="MailPropertys" EntityType="Self.MailPropertys" />
+          <EntitySet Name="MailsTemplates" EntityType="Self.MailsTemplates" />
+          <EntitySet Name="WorkTime" EntityType="Self.WorkTime" />
+          <AssociationSet Name="FK_MailPropertys_0_0" Association="Self.FK_MailPropertys_0_0">
+            <End Role="MailsTemplates" EntitySet="MailsTemplates" />
+            <End Role="MailPropertys" EntitySet="MailPropertys" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="Хранилище baseModelContainer" CdmEntityContainer="baseEntities">
+          <EntitySetMapping Name="Generated">
+            <EntityTypeMapping TypeName="baseModel.Generated">
+              <MappingFragment StoreEntitySet="Generated">
+                <ScalarProperty Name="Index" ColumnName="Index" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Label" ColumnName="Label" />
+                <ScalarProperty Name="ParentName" ColumnName="ParentName" />
+                <ScalarProperty Name="IsButton" ColumnName="IsButton" />
+                <ScalarProperty Name="IsMenu" ColumnName="IsMenu" />
+                <ScalarProperty Name="IsSeparator" ColumnName="IsSeparator" />
+                <ScalarProperty Name="IsGroup" ColumnName="IsGroup" />
+                <ScalarProperty Name="Image" ColumnName="Image" />
+                <ScalarProperty Name="SuperTip" ColumnName="SuperTip" />
+                <ScalarProperty Name="ScreenTip" ColumnName="ScreenTip" />
+                <ScalarProperty Name="TemplateNO" ColumnName="TemplateNO" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MailPropertys">
+            <EntityTypeMapping TypeName="baseModel.MailPropertys">
+              <MappingFragment StoreEntitySet="MailPropertys">
+                <ScalarProperty Name="ButtonID" ColumnName="ButtonID" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Only6565" ColumnName="Only6565" />
+                <ScalarProperty Name="Only6690" ColumnName="Only6690" />
+                <ScalarProperty Name="FillTO" ColumnName="FillTO" />
+                <ScalarProperty Name="TO" ColumnName="TO" />
+                <ScalarProperty Name="FillCopy" ColumnName="FillCopy" />
+                <ScalarProperty Name="Copy" ColumnName="Copy" />
+                <ScalarProperty Name="FillHideCopy" ColumnName="FillHideCopy" />
+                <ScalarProperty Name="HideCopy" ColumnName="HideCopy" />
+                <ScalarProperty Name="FillSubject" ColumnName="FillSubject" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="HighImportance" ColumnName="HighImportance" />
+                <ScalarProperty Name="Reminder" ColumnName="Reminder" />
+                <ScalarProperty Name="ReminderTime" ColumnName="ReminderTime" />
+                <ScalarProperty Name="FillBody" ColumnName="FillBody" />
+                <ScalarProperty Name="BodyID" ColumnName="BodyID" />
+                <ScalarProperty Name="Zametka1" ColumnName="Zametka1" />
+                <ScalarProperty Name="Zametka2" ColumnName="Zametka2" />
+                <ScalarProperty Name="Zametka3" ColumnName="Zametka3" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MailsTemplates">
+            <EntityTypeMapping TypeName="baseModel.MailsTemplates">
+              <MappingFragment StoreEntitySet="MailsTemplates">
+                <ScalarProperty Name="Templateid" ColumnName="Templateid" />
+                <ScalarProperty Name="Templadescription" ColumnName="Templadescription" />
+                <ScalarProperty Name="TemplateBody" ColumnName="TemplateBody" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WorkTime">
+            <EntityTypeMapping TypeName="baseModel.WorkTime">
+              <MappingFragment StoreEntitySet="WorkTime">
+                <ScalarProperty Name="RegionOrTT" ColumnName="RegionOrTT" />
+                <ScalarProperty Name="TT" ColumnName="TT" />
+                <ScalarProperty Name="OpenTime" ColumnName="OpenTime" />
+                <ScalarProperty Name="CloseTime" ColumnName="CloseTime" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="Нет" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

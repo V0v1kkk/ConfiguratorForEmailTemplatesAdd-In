@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHConfigurator", "MHConfigurator\MHConfigurator.csproj", "{9BD565D2-C669-4209-8419-B5F7B9FC8573}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccessLibrary", "DataAccessLibrary\DataAccessLibrary.csproj", "{C328C369-AD3F-4C2B-9BD5-7BAF7640E07F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Configurator", "Configurator\Configurator.csproj", "{0C5DEDE0-514B-41CC-AE2C-202E288EFA72}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9BD565D2-C669-4209-8419-B5F7B9FC8573}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BD565D2-C669-4209-8419-B5F7B9FC8573}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BD565D2-C669-4209-8419-B5F7B9FC8573}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BD565D2-C669-4209-8419-B5F7B9FC8573}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C328C369-AD3F-4C2B-9BD5-7BAF7640E07F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C328C369-AD3F-4C2B-9BD5-7BAF7640E07F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C328C369-AD3F-4C2B-9BD5-7BAF7640E07F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C328C369-AD3F-4C2B-9BD5-7BAF7640E07F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C5DEDE0-514B-41CC-AE2C-202E288EFA72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C5DEDE0-514B-41CC-AE2C-202E288EFA72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C5DEDE0-514B-41CC-AE2C-202E288EFA72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C5DEDE0-514B-41CC-AE2C-202E288EFA72}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
