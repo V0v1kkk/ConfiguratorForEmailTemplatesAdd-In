@@ -25,6 +25,8 @@ namespace MHConfigurator.ViewModels
             MailsTemplates = DAL.GetDAL().GetEmptyMailTemplates();
 
             CancelCommand = new RelayCommand(CancelCommandExecute,CancelCanExecute,this);
+            SaveCommand = new RelayCommand(SaveCommandExecute, SaveCanExecute, this);
+            NewCommand = new RelayCommand(NewCommandExecute, NewCanExecute, this);
         }
 
         
@@ -207,32 +209,48 @@ namespace MHConfigurator.ViewModels
 
         private void CancelCommandExecute(object cmdParameter)
         {
-            if (!NewModeOn && (_originalCurrentProperty != null) && (CurrentProperty != null) &&
+            if (!_newModeOn && (_originalCurrentProperty != null) && (CurrentProperty != null) &&
                 (_originalCurrentProperty != CurrentProperty))
             {
-                _currentProperty = _originalCurrentProperty;
+                _currentPropertyAlredyChange = true; //Нужно, чтобы подавить выдачу popup'a при изменении свойства
+                MailProperties[MailProperties.IndexOf(_currentProperty)] = _originalCurrentProperty;
             }
-            else if(NewModeOn)
+            else if(_newModeOn)
             {
                 _currentProperty = null;
-                NewModeOn = false;
+                _newModeOn = false;
             }
         }
+        private void NewCommandExecute(object cmdParameter)
+        {
+            
+        }
 
+        private void SaveCommandExecute(object cmdParameter)
+        {
+            
+        }
 
         #endregion
 
         #region CanExecute
 
-        private bool NewModeOn = false;
+        private bool _newModeOn = false;
+        private bool _cancelCanExecute = true;
+        private bool _saveCanExecute = true;
 
         private bool CancelCanExecute(object cmdParameter)
         {
             return _cancelCanExecute;
         }
-        public bool _cancelCanExecute = true;
-
-
+        private bool NewCanExecute(object cmdParameter)
+        {
+            return !_newModeOn;
+        }
+        private bool SaveCanExecute(object cmdParameter)
+        {
+            return _newModeOn ||(_currentProperty!=_originalCurrentProperty);
+        }
 
         #endregion
 
