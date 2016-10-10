@@ -12,6 +12,7 @@ using MugenMvvmToolkit.Models;
 using System.Windows.Input;
 using MHConfigurator.Models;
 using System.Windows;
+using System.Windows.Navigation;
 
 namespace MHConfigurator.ViewModels
 {
@@ -21,6 +22,11 @@ namespace MHConfigurator.ViewModels
         public MainViewModel()
         {
             _mailProperties = new ObservableCollection<MailProperty>(DAL.GetDAL().MailPropertys);
+            foreach (var property in _mailProperties)
+            {
+                property.PropertyChanged += MailPropertyInCollection_Changed;
+            }
+            _mailProperties.CollectionChanged += _mailProperties_CollectionChanged;
 
             MailsTemplates = DAL.GetDAL().GetEmptyMailTemplates();
 
@@ -29,7 +35,23 @@ namespace MHConfigurator.ViewModels
             NewCommand = new RelayCommand(NewCommandExecute, NewCanExecute, this);
         }
 
-        
+        private void _mailProperties_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+                foreach (MailProperty item in e.NewItems)
+                    item.PropertyChanged += MailPropertyInCollection_Changed;
+            if (e.OldItems != null)
+                foreach (MailProperty item in e.OldItems)
+                    item.PropertyChanged -= MailPropertyInCollection_Changed;
+        }
+
+        private void MailPropertyInCollection_Changed(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged();
+            //MessageBox.Show("!!!");
+        }
+
+
         #region Fields
 
         #region Backing Fields
@@ -135,6 +157,7 @@ namespace MHConfigurator.ViewModels
             }
         }
 
+
         private bool _currentPropertyAlredyChange; 
         public MailProperty CurrentProperty
         {
@@ -152,7 +175,7 @@ namespace MHConfigurator.ViewModels
                     else
                     {
                         _currentPropertyAlredyChange = true;
-                        MailProperties[MailProperties.IndexOf(_currentProperty)] = _originalCurrentProperty; //Находим в коллекции изменённый объект и заменить его оригиналом
+                        MailProperties[MailProperties.IndexOf(CurrentProperty)] = _originalCurrentProperty; //Находим в коллекции изменённый объект и заменить его оригиналом
                     }
                     //Выдать сообщение, что изменения не сохранены
                     //В зависимости от результата или:
@@ -209,51 +232,121 @@ namespace MHConfigurator.ViewModels
 
         private void CancelCommandExecute(object cmdParameter)
         {
-            if (!_newModeOn && (_originalCurrentProperty != null) && (CurrentProperty != null) &&
+            if (!NewModeOn && (_originalCurrentProperty != null) && (CurrentProperty != null) &&
                 (_originalCurrentProperty != CurrentProperty))
             {
                 _currentPropertyAlredyChange = true; //Нужно, чтобы подавить выдачу popup'a при изменении свойства
-                MailProperties[MailProperties.IndexOf(_currentProperty)] = _originalCurrentProperty;
+                MailProperties[MailProperties.IndexOf(CurrentProperty)] = _originalCurrentProperty;
             }
-            else if(_newModeOn)
+            else if(NewModeOn)
             {
-                _currentProperty = null;
-                _newModeOn = false;
+                NewModeOn = false;
+                _currentPropertyAlredyChange = true;
+                CurrentProperty = null;
             }
+
+            OnPropertyChanged(new PropertyChangedEventArgs("MailProperties"));
+            OnPropertyChanged(new PropertyChangedEventArgs("CurrentProperty"));
+            CommandManager.InvalidateRequerySuggested();
         }
         private void NewCommandExecute(object cmdParameter)
         {
-            
+            NewModeOn = true;
+            _originalCurrentProperty = null;
+            CurrentProperty = new MailProperty();
+            OnPropertyChanged();
         }
 
         private void SaveCommandExecute(object cmdParameter)
         {
+            //TODO: Проверка на существование элемента (задаётся доп. вопрос, другая добавка в список) 
+            DAL.GetDAL().SaveMailProperty(CurrentProperty);
+            _originalCurrentProperty = Helper.DeepClone(CurrentProperty);
+            if (NewModeOn)
+            {
+                NewModeOn = false;
+                _currentPropertyAlredyChange = true;
+                MailProperties.Add(CurrentProperty);
+                CurrentProperty = null;
+
+                MailProperties = new ObservableCollection<MailProperty>(MailProperties.OrderBy(x => x.ButtonID));
+                /*
+                var temp = DAL.GetDAL().MailPropertys;
+                foreach (var property in temp)
+                {
+                    if (!MailProperties.Contains(property))
+                    {
+                        MailProperties.Add(property);
+                        MailProperties = new ObservableCollection<MailProperty>(MailProperties.OrderBy(x=>x.ButtonID));
+                    }
+                }*/   
+            }
+           
             
+            OnPropertyChanged(new PropertyChangedEventArgs("MailProperties"));
+            OnPropertyChanged(new PropertyChangedEventArgs("CurrentProperty"));
+            CommandManager.InvalidateRequerySuggested();
         }
 
         #endregion
 
         #region CanExecute
 
-        private bool _newModeOn = false;
+        public bool NewModeOn
+        {
+            get { return _newModeOn; }
+            private set
+            {
+                _newModeOn = value;
+                OnPropertyChanged();
+                OnPropertyChanged(new PropertyChangedEventArgs("ListViewEnabled"));
+            }
+        }
+
         private bool _cancelCanExecute = true;
         private bool _saveCanExecute = true;
+        private bool _newModeOn = false;
+        
+
 
         private bool CancelCanExecute(object cmdParameter)
         {
-            return _cancelCanExecute;
+            if (NewModeOn || 
+                (!NewModeOn && (_originalCurrentProperty != null) && (CurrentProperty != null) && (_originalCurrentProperty != CurrentProperty)))
+            {
+                return true;
+            }
+            return false;
         }
         private bool NewCanExecute(object cmdParameter)
         {
-            return !_newModeOn;
+            return !NewModeOn;
         }
         private bool SaveCanExecute(object cmdParameter)
         {
-            return _newModeOn ||(_currentProperty!=_originalCurrentProperty);
+            return NewModeOn || ((_originalCurrentProperty != null) && (CurrentProperty != null) && (CurrentProperty != _originalCurrentProperty));
         }
 
         #endregion
 
         #endregion
+
+        public bool ListViewEnabled => !NewModeOn;
+
+        public void DeleteCommand(MailProperty property)
+        {
+            MessageBoxResult result = MessageBox.Show("Удаление необратимо. Удалить шаблон?", "Удаление шаблона", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                if (!DAL.GetDAL().DeleteMailProperty(property))
+                {
+                    MessageBox.Show("Не удалось удалить шаблон.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else
+                {
+                    MailProperties.Remove(property);
+                }
+            }
+        }
     }
 }

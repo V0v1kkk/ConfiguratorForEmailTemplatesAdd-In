@@ -4,6 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="Редактирование шаблонов писем"
         Width="1000"
         Height="Auto"
@@ -39,12 +40,20 @@
                   Margin="5"
                   HorizontalAlignment="Stretch"
                   VerticalAlignment="Stretch"
+                  IsEnabled="{Binding ListViewEnabled,
+                                      Mode=OneWay}"
                   ItemsSource="{Binding Path=MailProperties,
                                         Mode=TwoWay,
                                         UpdateSourceTrigger=PropertyChanged}"
                   SelectedItem="{Binding Path=CurrentProperty,
                                          Mode=TwoWay,
                                          UpdateSourceTrigger=PropertyChanged}">
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Click="{DataBinding 'DeleteCommand($Relative(ListView).SelectedItem)'}" Header="Удалить" />
+                </ContextMenu>
+            </ListView.ContextMenu>
+
             <ListView.View>
                 <GridView>
                     <GridViewColumn Width="Auto"
@@ -88,7 +97,9 @@
                          VerticalAlignment="Center"
                          VerticalContentAlignment="Center"
                          DockPanel.Dock="Right"
-                         Text="{Binding CurrentProperty.ButtonID}" />
+                         Text="{Binding CurrentProperty.ButtonID,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        Mode=TwoWay}" />
             </DockPanel>
 
 
@@ -105,7 +116,9 @@
                 <TextBox Margin="2,2,5,2"
                          VerticalContentAlignment="Center"
                          DockPanel.Dock="Left"
-                         Text="{Binding CurrentProperty.Description}"
+                         Text="{Binding CurrentProperty.Description,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        Mode=TwoWay}"
                          TextWrapping="Wrap" />
             </DockPanel>
 
@@ -115,7 +128,8 @@
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           DockPanel.Dock="Left"
-                          IsChecked="{Binding CurrentProperty.FillSubject}">
+                          IsChecked="{Binding CurrentProperty.FillSubject,
+                                              Mode=TwoWay}">
                     Заполнять тему
                 </CheckBox>
             </DockPanel>
@@ -131,7 +145,11 @@
                 <TextBox Margin="2,2,5,2"
                          VerticalContentAlignment="Center"
                          DockPanel.Dock="Left"
-                         Text="{Binding CurrentProperty.Subject}"
+                         IsEnabled="{Binding CurrentProperty.FillSubject,
+                                             Mode=TwoWay}"
+                         Text="{Binding CurrentProperty.Subject,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        Mode=TwoWay}"
                          TextWrapping="Wrap" />
             </DockPanel>
 
@@ -140,7 +158,8 @@
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           DockPanel.Dock="Left"
-                          IsChecked="{Binding CurrentProperty.FillTO}">
+                          IsChecked="{Binding CurrentProperty.FillTO,
+                                              Mode=TwoWay}">
                     Заполнять адресатов
                 </CheckBox>
             </DockPanel>
@@ -155,7 +174,11 @@
                 <TextBox Margin="2,2,5,2"
                          VerticalContentAlignment="Center"
                          DockPanel.Dock="Left"
-                         Text="{Binding CurrentProperty.TO}"
+                         IsEnabled="{Binding CurrentProperty.FillTO,
+                                             Mode=TwoWay}"
+                         Text="{Binding CurrentProperty.TO,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        Mode=TwoWay}"
                          TextWrapping="Wrap" />
             </DockPanel>
 
@@ -164,7 +187,8 @@
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           DockPanel.Dock="Left"
-                          IsChecked="{Binding CurrentProperty.FillCopy}">
+                          IsChecked="{Binding CurrentProperty.FillCopy,
+                                              Mode=TwoWay}">
                     Заполнять копию
                 </CheckBox>
             </DockPanel>
@@ -179,7 +203,11 @@
                 <TextBox Margin="2,2,5,2"
                          VerticalContentAlignment="Center"
                          DockPanel.Dock="Left"
-                         Text="{Binding CurrentProperty.Copy}"
+                         IsEnabled="{Binding CurrentProperty.FillCopy,
+                                             Mode=TwoWay}"
+                         Text="{Binding CurrentProperty.Copy,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        Mode=TwoWay}"
                          TextWrapping="Wrap" />
             </DockPanel>
 
@@ -188,7 +216,8 @@
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           DockPanel.Dock="Left"
-                          IsChecked="{Binding CurrentProperty.FillHideCopy}">
+                          IsChecked="{Binding CurrentProperty.FillHideCopy,
+                                              Mode=TwoWay}">
                     Заполнять скрытую копию
                 </CheckBox>
             </DockPanel>
@@ -203,7 +232,11 @@
                 <TextBox Margin="2,2,5,2"
                          VerticalContentAlignment="Center"
                          DockPanel.Dock="Left"
-                         Text="{Binding CurrentProperty.HideCopy}"
+                         IsEnabled="{Binding CurrentProperty.FillHideCopy,
+                                             Mode=TwoWay}"
+                         Text="{Binding CurrentProperty.HideCopy,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        Mode=TwoWay}"
                          TextWrapping="Wrap" />
             </DockPanel>
 
@@ -212,7 +245,8 @@
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           DockPanel.Dock="Left"
-                          IsChecked="{Binding CurrentProperty.HighImportance}">
+                          IsChecked="{Binding CurrentProperty.HighImportance,
+                                              Mode=TwoWay}">
                     Высокая важность
                 </CheckBox>
             </DockPanel>
@@ -222,7 +256,9 @@
                 <CheckBox Margin="5"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"
-                          DockPanel.Dock="Left">
+                          DockPanel.Dock="Left"
+                          IsChecked="{Binding CurrentProperty.Reminder,
+                                              Mode=TwoWay}">
                     Напоминание
                 </CheckBox>
                 <TextBlock Margin="4"
@@ -230,9 +266,13 @@
                            DockPanel.Dock="Left">
                     Время напоминания:
                 </TextBlock>
-                <TextBox Margin="2,2,5,2"
-                         VerticalContentAlignment="Center"
-                         DockPanel.Dock="Left" />
+                <xctk:TimePicker Margin="2,2,5,2"
+                                 VerticalContentAlignment="Center"
+                                 DockPanel.Dock="Left"
+                                 IsEnabled="{Binding CurrentProperty.Reminder,
+                                                     Mode=TwoWay}"
+                                 Value="{Binding CurrentProperty.ReminderTime,
+                                                 Mode=TwoWay}" />
             </DockPanel>
 
             <DockPanel Grid.Row="6" Grid.Column="1">
@@ -240,9 +280,17 @@
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           DockPanel.Dock="Left"
-                          IsChecked="{Binding CurrentProperty.FillBody}">
+                          IsChecked="{Binding CurrentProperty.FillBody,
+                                              Mode=TwoWay}">
                     Заполнять текст письма
                 </CheckBox>
+
+                <ComboBox Background="Brown"
+                          DisplayMemberPath="TemplateDescription"
+                          ItemsSource="{Binding MailsTemplates}"
+                          SelectedValue="{Binding CurrentProperty.BodyID,
+                                                  Mode=TwoWay}"
+                          SelectedValuePath="TemplateId" />
 
             </DockPanel>
 
@@ -290,7 +338,9 @@
                          DockPanel.Dock="Right"
                          Language="ru-ru"
                          SpellCheck.IsEnabled="True"
-                         Text="{Binding CurrentProperty.Zametka1}"
+                         Text="{Binding CurrentProperty.Zametka1,
+                                        UpdateSourceTrigger=PropertyChanged,
+                                        Mode=TwoWay}"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Visible" />
             </DockPanel>

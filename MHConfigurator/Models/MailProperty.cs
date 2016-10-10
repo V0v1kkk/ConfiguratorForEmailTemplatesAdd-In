@@ -4,13 +4,31 @@ using MugenMvvmToolkit.Models;
 namespace MHConfigurator.Models
 {
     [Serializable]
-    public class MailProperty //: NotifyPropertyChangedBase
+    public class MailProperty : NotifyPropertyChangedBase
     {
         private int _buttonId;
-        private string _description;
 
         public readonly int Guid = System.Guid.NewGuid().GetHashCode();
-        //private int _buttonId;
+        private string _description;
+        private bool _only6565;
+        private bool _only6690;
+        private bool _fillTo;
+        private string _to;
+        private bool _fillCopy;
+        private string _copy;
+        private bool _fillHideCopy;
+        private string _hideCopy;
+        private bool _fillSubject;
+        private string _subject;
+        private bool _highImportance;
+        private bool _reminder;
+        private DateTime _reminderTime;
+        private bool _fillBody;
+        private int _bodyId;
+        private string _zametka1;
+        private string _zametka2;
+        private string _zametka3;
+        private bool _useful;
 
         public int ButtonID
         {
@@ -18,32 +36,189 @@ namespace MHConfigurator.Models
             set
             {
                 _buttonId = value;
-                //PropertyChanged()
+                OnPropertyChanged();
             }
         }
-
-
-        public string Description { get; set; }
-        public bool Only6565 { get; set; } //Изменять ли ящик на 6565 при заполнении по шаблону
-        public bool Only6690 { get; set; } //Изменять ли ящик на 6690 при заполнении по шаблону
-        public bool FillTO { get; set; } //Заполнять адресатов
-        public string TO { get; set; } //Адресаты
-        public bool FillCopy { get; set; } //Заполнять копию
-        public string Copy { get; set; } // Копия
-        public bool FillHideCopy { get; set; } //Заполнять скрытую копию
-        public string HideCopy { get; set; } //Скрытая копия
-        public bool FillSubject { get; set; } //Заполнять тему (на случай ответа на письмо)
-        public string Subject { get; set; } //Тема
-        public bool HighImportance { get; set; } //Высокая важность
-        public bool Reminder { get; set; } //Ставить ли напоминание
-        public DateTime ReminderTime { get; set; } //Время напоминания
-        public bool FillBody { get; set; } //Заполнять текст письма
-        public int BodyID { get; set; } //Текст письма
-        public string Zametka1 { get; set; } //Заметка 1я строка
-        public string Zametka2 { get; set; } //Заметка 2я строка
-        public string Zametka3 { get; set; } //Заметка 3я строка
-        public bool Useful { get; set; } //Используется ли шаблон
-
+        public string Description
+        {
+            get { return _description; }
+            set
+            {
+                _description = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool Only6565
+        {
+            get { return _only6565; }
+            set
+            {
+                _only6565 = value;
+                OnPropertyChanged();
+            }
+        } //Изменять ли ящик на 6565 при заполнении по шаблону
+        public bool Only6690
+        {
+            get { return _only6690; }
+            set
+            {
+                _only6690 = value;
+                OnPropertyChanged();
+            }
+        } //Изменять ли ящик на 6690 при заполнении по шаблону
+        public bool FillTO
+        {
+            get { return _fillTo; }
+            set
+            {
+                _fillTo = value;
+                OnPropertyChanged();
+            }
+        } //Заполнять адресатов
+        public string TO
+        {
+            get { return _to; }
+            set
+            {
+                _to = value;
+                OnPropertyChanged();
+            }
+        } //Адресаты
+        public bool FillCopy
+        {
+            get { return _fillCopy; }
+            set
+            {
+                _fillCopy = value;
+                OnPropertyChanged();
+            }
+        } //Заполнять копию
+        public string Copy
+        {
+            get { return _copy; }
+            set
+            {
+                _copy = value;
+                OnPropertyChanged();
+            }
+        } // Копия
+        public bool FillHideCopy
+        {
+            get { return _fillHideCopy; }
+            set
+            {
+                _fillHideCopy = value;
+                OnPropertyChanged();
+            }
+        } //Заполнять скрытую копию
+        public string HideCopy
+        {
+            get { return _hideCopy; }
+            set
+            {
+                _hideCopy = value;
+                OnPropertyChanged();
+            }
+        } //Скрытая копия
+        public bool FillSubject
+        {
+            get { return _fillSubject; }
+            set
+            {
+                _fillSubject = value;
+                OnPropertyChanged();
+            }
+        } //Заполнять тему (на случай ответа на письмо)
+        public string Subject
+        {
+            get { return _subject; }
+            set
+            {
+                _subject = value;
+                OnPropertyChanged();
+            }
+        } //Тема
+        public bool HighImportance
+        {
+            get { return _highImportance; }
+            set
+            {
+                _highImportance = value;
+                OnPropertyChanged();
+            }
+        } //Высокая важность
+        public bool Reminder
+        {
+            get { return _reminder; }
+            set
+            {
+                _reminder = value;
+                OnPropertyChanged();
+            }
+        } //Ставить ли напоминание
+        public DateTime ReminderTime
+        {
+            get { return _reminderTime; }
+            set
+            {
+                _reminderTime = value;
+                OnPropertyChanged();
+            }
+        } //Время напоминания
+        public bool FillBody
+        {
+            get { return _fillBody; }
+            set
+            {
+                _fillBody = value;
+                OnPropertyChanged();
+            }
+        } //Заполнять текст письма
+        public int BodyID
+        {
+            get { return _bodyId; }
+            set
+            {
+                _bodyId = value;
+                OnPropertyChanged();
+            }
+        } //Текст письма
+        public string Zametka1
+        {
+            get { return _zametka1; }
+            set
+            {
+                _zametka1 = value;
+                OnPropertyChanged();
+            }
+        } //Заметка 1я строка
+        public string Zametka2
+        {
+            get { return _zametka2; }
+            set
+            {
+                _zametka2 = value;
+                OnPropertyChanged();
+            }
+        } //Заметка 2я строка
+        public string Zametka3
+        {
+            get { return _zametka3; }
+            set
+            {
+                _zametka3 = value;
+                OnPropertyChanged();
+            }
+        } //Заметка 3я строка
+        public bool Useful
+        {
+            get { return _useful; }
+            set
+            {
+                _useful = value;
+                OnPropertyChanged();
+            }
+        } //Используется ли шаблон
         public MailProperty()
         {
             ButtonID = 0;

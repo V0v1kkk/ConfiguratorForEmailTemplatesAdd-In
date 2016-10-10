@@ -49,10 +49,10 @@
         </EntityType>
         <EntityType Name="MailsTemplates">
           <Key>
-            <PropertyRef Name="Templateid" />
+            <PropertyRef Name="TemplateId" />
           </Key>
-          <Property Name="Templateid" Type="integer" Nullable="false" />
-          <Property Name="Templadescription" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="TemplateId" Type="integer" Nullable="false" />
+          <Property Name="TemplateDescription" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
           <Property Name="TemplateBody" Type="blob" />
         </EntityType>
         <!--Ошибки, обнаруженные при создании:
@@ -76,7 +76,7 @@
           <End Role="MailPropertys" Type="Self.MailPropertys" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="MailsTemplates">
-              <PropertyRef Name="Templateid" />
+              <PropertyRef Name="TemplateId" />
             </Principal>
             <Dependent Role="MailPropertys">
               <PropertyRef Name="BodyID" />
@@ -151,10 +151,10 @@ FROM [WorkTime] AS [WorkTime]</DefiningQuery>
         </EntityType>
         <EntityType Name="MailsTemplates">
           <Key>
-            <PropertyRef Name="Templateid" />
+            <PropertyRef Name="TemplateId" />
           </Key>
-          <Property Name="Templateid" Type="Int64" Nullable="false" />
-          <Property Name="Templadescription" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="TemplateId" Type="Int64" Nullable="false" />
+          <Property Name="TemplateDescription" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="TemplateBody" Type="Binary" MaxLength="2147483647" FixedLength="false" />
           <NavigationProperty Name="MailPropertys" Relationship="Self.FK_MailPropertys_0_0" FromRole="MailsTemplates" ToRole="MailPropertys" />
         </EntityType>
@@ -177,7 +177,7 @@ FROM [WorkTime] AS [WorkTime]</DefiningQuery>
           <End Role="MailPropertys" Type="Self.MailPropertys" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="MailsTemplates">
-              <PropertyRef Name="Templateid" />
+              <PropertyRef Name="TemplateId" />
             </Principal>
             <Dependent Role="MailPropertys">
               <PropertyRef Name="BodyID" />
@@ -247,8 +247,8 @@ FROM [WorkTime] AS [WorkTime]</DefiningQuery>
           <EntitySetMapping Name="MailsTemplates">
             <EntityTypeMapping TypeName="baseModel.MailsTemplates">
               <MappingFragment StoreEntitySet="MailsTemplates">
-                <ScalarProperty Name="Templateid" ColumnName="Templateid" />
-                <ScalarProperty Name="Templadescription" ColumnName="Templadescription" />
+                <ScalarProperty Name="TemplateId" ColumnName="TemplateId" />
+                <ScalarProperty Name="TemplateDescription" ColumnName="TemplateDescription" />
                 <ScalarProperty Name="TemplateBody" ColumnName="TemplateBody" />
               </MappingFragment>
             </EntityTypeMapping>

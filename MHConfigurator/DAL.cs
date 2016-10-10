@@ -12,11 +12,13 @@ using MailsTemplate = MHConfigurator.Models.MailsTemplate;
 
 namespace MHConfigurator
 {
+    //TODO: Передалать на обсервабл коллекциях
     // ReSharper disable once InconsistentNaming
     public class DAL
     {
         private static readonly object Locker;
         static private DAL _instance;
+
 
         private DAL()
         {
@@ -38,6 +40,8 @@ namespace MHConfigurator
                     .ForMember(x => x.MailsTemplate, o => o.UseDestinationValue());
             });
             //Mapper.Initialize(cfg => cfg.CreateMap<MailProperty, DataAccessLibrary.MailProperty>());
+
+            
         }
 
         public static DAL GetDAL()
@@ -63,7 +67,7 @@ namespace MHConfigurator
                 }
                 return _mailPropertys;
             }
-            set
+            private set
             {
                 _mailPropertys = value;
                 //Тут писать в базу?
@@ -84,7 +88,7 @@ namespace MHConfigurator
                 return _usedTemplates; 
                 
             }
-            set
+            private set
             {
                 _usedTemplates = value;
                 //Писать в базу?
@@ -196,6 +200,32 @@ namespace MHConfigurator
             }
         }
 
+        public bool DeleteMailProperty(MailProperty mailProperty)
+        {
+            using (var uow = new UnitOfWork())
+            {
+                try
+                {
+                    var dbProp = uow.Propertys.Find(property => property.ButtonID == mailProperty.ButtonID).FirstOrDefault();
+                    if (dbProp == null)
+                    {
+                        return false; 
+                    }
+                    else
+                    {
+                        uow.Propertys.Remove(dbProp);
+                    }
+                    uow.Complete();
+                    return true;
+                }
+                catch (Exception)
+                {
+                    //todo: Залогировать
+                    return false;
+                }
+            }
+        }
+
         public List<MailsTemplate> GetEmptyMailTemplates()
         {
             //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
@@ -209,8 +239,8 @@ namespace MHConfigurator
                     {
                         list.Add(new MailsTemplate()
                         {
-                            Templateid = enitity.Item1,
-                            Templadescription = enitity.Item2,
+                            TemplateId = enitity.Item1,
+                            TemplateDescription = enitity.Item2,
                             TemplateBody = null
                         });
                     }
