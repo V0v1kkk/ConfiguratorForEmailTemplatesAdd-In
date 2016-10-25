@@ -38,8 +38,13 @@ namespace MHConfigurator
 
 
                 cfg.CreateMap<DataAccessLibrary.MailsTemplate, MailTemplate>()
-                .ForMember(x=>x.TemplateDescription, o=>o.MapFrom(template => template.Templadescription));
-                cfg.CreateMap<MailTemplate, DataAccessLibrary.MailsTemplate>().ForMember(x=>x.MailPropertys, o=>o.UseDestinationValue());
+                .ForMember(x=>x.TemplateDescription, o=>o.MapFrom(template => template.Templadescription))
+                .ForMember(x=>x.TemplateBodyRusFix, o=>o.Ignore())
+                .ForMember(x=>x.TemplateBody, o=>o.MapFrom(template => Encoding.GetEncoding("windows-1251")
+                .GetString(Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("windows-1251"), template.TemplateBody))));
+                cfg.CreateMap<MailTemplate, DataAccessLibrary.MailsTemplate>().ForMember(x=>x.MailPropertys, o=>o.UseDestinationValue())
+                .ForMember(x=>x.Templadescription, o=>o.MapFrom(template => template.TemplateDescription))
+                .ForMember(x=>x.TemplateBody,o=>o.MapFrom(template =>Encoding.Convert(Encoding.GetEncoding("windows-1251"), Encoding.UTF8, Encoding.GetEncoding("windows-1251").GetBytes(template.TemplateBody))));
             });
         }
 
@@ -281,6 +286,24 @@ namespace MHConfigurator
                     //todo: Залогировать
                     return null;
                 }
+            }
+        }
+
+        public MailProperty GetMailTemplateById(int id)
+        {
+            using (var uow = new UnitOfWork())
+            {
+                MailProperty t = null;
+                try
+                {
+                    t = Mapper.Map<DataAccessLibrary.MailsTemplate, MailsTemplates>(uow.Templates.Find(x => x.Templateid == id).First());
+
+                }
+                catch (Exception)
+                {
+                    //todo: Залогировать
+                }
+                return t;
             }
         }
         #endregion

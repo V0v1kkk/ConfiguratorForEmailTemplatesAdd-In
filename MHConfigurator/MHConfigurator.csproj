@@ -168,6 +168,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Model1.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Models\MailTemplateEditable.cs" />
     <Compile Include="Models\PanelElements\ButtonElement.cs" />
     <Compile Include="Models\PanelElements\GroupElement.cs" />
     <Compile Include="Models\MailProperty.cs" />

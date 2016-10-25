@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MHConfigurator.Models;
+using MugenMvvmToolkit.Binding.Extensions.Syntax;
 using MugenMvvmToolkit.ViewModels;
 
 namespace MHConfigurator.ViewModels
@@ -42,6 +44,11 @@ namespace MHConfigurator.ViewModels
         public MailEditorViewModel()
         {
             
+        }
+
+        public MailEditorViewModel(int templateId)
+        {
+            MailTemplate mailTemplate = DAL.GetDAL().
         }
     }
 

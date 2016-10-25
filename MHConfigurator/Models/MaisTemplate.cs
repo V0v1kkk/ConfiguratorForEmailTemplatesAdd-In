@@ -28,7 +28,7 @@ namespace MHConfigurator.Models
             }
         }
 
-        public byte[] TemplateBody
+        public string TemplateBody
         {
             get { return _templateBody; }
             set
@@ -36,31 +36,45 @@ namespace MHConfigurator.Models
                 if (_templateBody == value) return;
                 _templateBody = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(TemplateBodyRusFix));
             }
         }
 
-        public string TemplateBodyText => GetBodyText();
+        public string TemplateBodyRusFix
+        {
+            get { return TemplateBody.Replace(@"charset=windows-1251", @"charset=UTF-8"); }
+            set
+            {
+                TemplateBody = value.Replace(@"charset=UTF-8", @"charset=windows-1251");
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(TemplateBody));
+            }
+        }
 
+        /*
         private string GetBodyText()
         {
             return Encoding.GetEncoding("windows-1251")
-                .GetString(Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("windows-1251"), TemplateBody)).Replace(@"charset=windows-1251", @"charset=UTF-8");
+                .GetString(Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("windows-1251"), TemplateBody))
+                .Replace(@"charset=windows-1251", @"charset=UTF-8");
         }
+        */
 
-        
 
         public string FullDescription => TemplateDescription + " (" + TemplateId + ")";
 
         private readonly int _guid = new Guid().GetHashCode();
         private int _templateId;
         private string _templateDescription;
-        private byte[] _templateBody;
+        private string _templateBody;
 
         public MailTemplate()
         {
+            /*
             TemplateId = 0;
             TemplateDescription = "";
             TemplateBody = null;
+            */
         }
 
         protected bool Equals(MailTemplate other)

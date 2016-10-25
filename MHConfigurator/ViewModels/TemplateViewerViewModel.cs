@@ -34,7 +34,7 @@ namespace MHConfigurator.ViewModels
                 if(_currentTemplate==value) return;
                 _currentTemplate = value;
 
-                CurrentHtml = ProcessingMacrosesOn ? Helper.ReplaceMacros(value.TemplateBodyText) : value.TemplateBodyText;
+                CurrentHtml = ProcessingMacrosesOn ? Helper.ReplaceMacros(value.TemplateBodyRusFix) : value.TemplateBodyRusFix;
 
                 OnPropertyChanged();
             }
