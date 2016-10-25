@@ -8,7 +8,7 @@ using DataAccessLibrary;
 using AutoMapper;
 using MHConfigurator.Models;
 using MailProperty = MHConfigurator.Models.MailProperty;
-using MailsTemplate = MHConfigurator.Models.MailsTemplate;
+using MailTemplate = MHConfigurator.Models.MailTemplate;
 
 namespace MHConfigurator
 {
@@ -33,15 +33,14 @@ namespace MHConfigurator
                     .ForMember(x => x.ButtonID, expression => expression.MapFrom(property => (int) property.ButtonID))
                     .ForMember(x => x.ReminderTime, expression => expression.MapFrom(property => DateTime.Parse(property.ReminderTime)))
                     .ForMember(x => x.Useful, expression => expression.MapFrom(property => GetDAL().UsedTemplates.Contains(property.ButtonID)));
-                //cfg.CreateMap<MailProperty, DataAccessLibrary.MailProperty>();
-                cfg.CreateMap<DataAccessLibrary.MailsTemplate, MailsTemplate>();
-
                 cfg.CreateMap<MailProperty, DataAccessLibrary.MailProperty>()
                     .ForMember(x => x.MailsTemplate, o => o.UseDestinationValue());
-            });
-            //Mapper.Initialize(cfg => cfg.CreateMap<MailProperty, DataAccessLibrary.MailProperty>());
 
-            
+
+                cfg.CreateMap<DataAccessLibrary.MailsTemplate, MailTemplate>()
+                .ForMember(x=>x.TemplateDescription, o=>o.MapFrom(template => template.Templadescription));
+                cfg.CreateMap<MailTemplate, DataAccessLibrary.MailsTemplate>().ForMember(x=>x.MailPropertys, o=>o.UseDestinationValue());
+            });
         }
 
         public static DAL GetDAL()
@@ -55,7 +54,7 @@ namespace MHConfigurator
         }
 
 
-        private bool _mailPropertyChanged = false; //Будет устанавливатся в случае записи в таблицу
+        private bool _mailPropertyChanged; //Будет устанавливатся в случае записи в таблицу
         private List<MailProperty> _mailPropertys = new List<MailProperty>(); //Возможно нужно модель унаследовать от модели
         public List<MailProperty> MailPropertys
         {
@@ -64,13 +63,14 @@ namespace MHConfigurator
                 if ((_mailPropertys == null)||(_mailPropertys.Count==0)||(_mailPropertyChanged))
                 {
                     _mailPropertys = GetMailPropertys();
+                    if (_mailPropertyChanged) _mailPropertyChanged = false;
                 }
                 return _mailPropertys;
             }
             private set
             {
                 _mailPropertys = value;
-                //Тут писать в базу?
+                //Тут писать в базу? сдалать публичным, Вичислять разницу межу коллекциями и приводить базу в соответствующее состояние???
             }
         }
 
@@ -159,24 +159,9 @@ namespace MHConfigurator
             }
         }
 
-        public List<long> GetUsedTemplatesNumbers()
-        {
-            List<long> answer = new List<long>();
-            using (var uow = new UnitOfWork())
-            {
-                try
-                {
-                    answer = uow.Generated.GetUsedTemplates();
-                }
-                catch (Exception)
-                {
-                    //todo: Залогировать
-                }
-                return answer;
-            }
-        }
+        
 
-        public void SaveMailProperty(MailProperty mailProperty)
+        public bool SaveMailProperty(MailProperty mailProperty)
         {
             using (var uow = new UnitOfWork())
             {
@@ -192,10 +177,13 @@ namespace MHConfigurator
                         Mapper.Map(mailProperty, dbProp);
                     }
                     uow.Complete();
+                    _mailPropertyChanged = true;
+                    return true;
                 }
                 catch (Exception)
                 {
                     //todo: Залогировать
+                    return false;
                 }
             }
         }
@@ -216,6 +204,7 @@ namespace MHConfigurator
                         uow.Propertys.Remove(dbProp);
                     }
                     uow.Complete();
+                    _mailPropertyChanged = true;
                     return true;
                 }
                 catch (Exception)
@@ -226,32 +215,74 @@ namespace MHConfigurator
             }
         }
 
-        public List<MailsTemplate> GetEmptyMailTemplates()
+    #region MailTemplates
+
+        public List<long> GetUsedTemplatesNumbers()
+        {
+            List<long> answer = new List<long>();
+            using (var uow = new UnitOfWork())
+            {
+                try
+                {
+                    answer = uow.Generated.GetUsedTemplates();
+                    return answer;
+                }
+                catch (Exception)
+                {
+                    //todo: Залогировать
+                    return null;
+                }
+                
+            }
+        }
+        public List<MailTemplate> GetEmptyMailTemplates()
         {
             //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
             using (var uow = new UnitOfWork())
             {
-                List<MailsTemplate> list = new List<MailsTemplate>();
+                List<MailTemplate> list = new List<MailTemplate>();
                 try
                 {
                     var templatesEnititys = uow.Templates.GetListOfEmptyTemplates();
                     foreach (var enitity in templatesEnititys)
                     {
-                        list.Add(new MailsTemplate()
+                        list.Add(new MailTemplate()
                         {
                             TemplateId = enitity.Item1,
                             TemplateDescription = enitity.Item2,
                             TemplateBody = null
                         });
                     }
+                    return list;
                 }
                 catch (Exception)
                 {
                     //todo: Залогировать
+                    return null;
                 }
-                return list;
             }
         }
 
+
+        public List<MailTemplate> GetMailTemplates()
+        {
+            //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
+            using (var uow = new UnitOfWork())
+            {
+                List<MailTemplate> list = new List<MailTemplate>();
+                try
+                {
+                    var templates = uow.Templates.GetAll();
+                    list.AddRange(templates.Select(mailsTemplate => Mapper.Map<DataAccessLibrary.MailsTemplate, MailTemplate>(mailsTemplate)).Where(x=>x.TemplateId!=0));
+                    return list;
+                }
+                catch (Exception)
+                {
+                    //todo: Залогировать
+                    return null;
+                }
+            }
+        }
+        #endregion
     }
 }

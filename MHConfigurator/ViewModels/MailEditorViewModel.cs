@@ -41,10 +41,7 @@ namespace MHConfigurator.ViewModels
 
         public MailEditorViewModel()
         {
-
-
-            BodyLink = File.ReadAllText(
-                @"D:\First Flash\C#\Проекты\Mass helper\Вспомогательное\Письма\RE Проблема с оформлением финансовых продуктов банка Хоум Кредит (183).htm", Encoding.GetEncoding("windows-1251"));
+            
         }
     }
 

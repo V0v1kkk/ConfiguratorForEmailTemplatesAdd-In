@@ -12,6 +12,45 @@
         MinHeight="400"
         d:DataContext="{Binding Path=ViewModels.MainViewModel}"
         mc:Ignorable="d">
+
+    <Window.Resources>
+
+        <Style x:Key="OpenTemplateButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <ImageBrush ImageSource="../Images/openImage.png" />
+                </Setter.Value>
+            </Setter>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="Black"
+                                BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background">
+                                    <Setter.Value>
+                                        <ImageBrush ImageSource="../Images/openImage.png" />
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="Border" Property="BorderBrush" Value="Black" />
+                                <Setter TargetName="Border" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -97,6 +136,8 @@
                          VerticalAlignment="Center"
                          VerticalContentAlignment="Center"
                          DockPanel.Dock="Right"
+                         IsEnabled="{Binding NewModeOn,
+                                             Mode=TwoWay}"
                          Text="{Binding CurrentProperty.ButtonID,
                                         UpdateSourceTrigger=PropertyChanged,
                                         Mode=TwoWay}" />
@@ -276,7 +317,7 @@
             </DockPanel>
 
             <DockPanel Grid.Row="6" Grid.Column="1">
-                <CheckBox Margin="5"
+                <CheckBox Margin="5,5,10,5"
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
                           DockPanel.Dock="Left"
@@ -285,12 +326,34 @@
                     Заполнять текст письма
                 </CheckBox>
 
-                <ComboBox Background="Brown"
-                          DisplayMemberPath="TemplateDescription"
-                          ItemsSource="{Binding MailsTemplates}"
-                          SelectedValue="{Binding CurrentProperty.BodyID,
+                <Grid HorizontalAlignment="Stretch"
+                      VerticalAlignment="Center"
+                      DockPanel.Dock="Right">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="30" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0"
+                              Margin="5,5,2,5"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              DisplayMemberPath="FullDescription"
+                              IsEnabled="{Binding CurrentProperty.FillBody,
                                                   Mode=TwoWay}"
-                          SelectedValuePath="TemplateId" />
+                              ItemsSource="{Binding MailsTemplates}"
+                              SelectedValue="{Binding CurrentProperty.BodyID,
+                                                      Mode=TwoWay}"
+                              SelectedValuePath="TemplateId" />
+                    <Button Grid.Column="1"
+                            Width="20"
+                            Height="20"
+                            Margin="2,5,5,5"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Click="{DataBinding OpenTemplateCommand}"
+                            Style="{DynamicResource OpenTemplateButtonStyle}" />
+                </Grid>
 
             </DockPanel>
 

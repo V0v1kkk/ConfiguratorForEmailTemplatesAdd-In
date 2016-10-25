@@ -174,16 +174,20 @@
     <Compile Include="Models\PanelElements\MenuElement.cs" />
     <Compile Include="Models\PanelElements\PanelElement.cs" />
     <Compile Include="Models\PanelElements\SeparatorElement.cs" />
-    <Compile Include="Models\TemplateSettings.cs" />
+    <Compile Include="Models\MaisTemplate.cs" />
     <Compile Include="Models\WorkTime.cs" />
     <Compile Include="Starter.cs" />
     <Compile Include="ViewModels\MailEditorViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\TemplateViewerViewModel.cs" />
     <Compile Include="Views\MailEditorView.xaml.cs">
       <DependentUpon>MailEditorView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TemplateViewerView.xaml.cs">
+      <DependentUpon>TemplateViewerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="WebBrowserHelper.cs" />
     <ApplicationDefinition Include="App.xaml">
@@ -200,6 +204,10 @@
     <Page Include="Views\MainView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\TemplateViewerView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
@@ -221,6 +229,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <Resource Include="Images\openImage.png" />
     <Content Include="Model1.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <DependentUpon>Model1.edmx</DependentUpon>
@@ -271,14 +280,13 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Configurator\Configurator.csproj">
-      <Project>{0c5dede0-514b-41cc-ae2c-202e288efa72}</Project>
-      <Name>Configurator</Name>
-    </ProjectReference>
     <ProjectReference Include="..\DataAccessLibrary\DataAccessLibrary.csproj">
       <Project>{c328c369-ad3f-4c2b-9bd5-7baf7640e07f}</Project>
       <Name>DataAccessLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.102.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.102.0\build\net45\System.Data.SQLite.Core.targets')" />

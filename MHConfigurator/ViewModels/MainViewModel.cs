@@ -28,27 +28,35 @@ namespace MHConfigurator.ViewModels
             }
             _mailProperties.CollectionChanged += _mailProperties_CollectionChanged;
 
-            MailsTemplates = DAL.GetDAL().GetEmptyMailTemplates();
+            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().GetEmptyMailTemplates());
 
             CancelCommand = new RelayCommand(CancelCommandExecute,CancelCanExecute,this);
             SaveCommand = new RelayCommand(SaveCommandExecute, SaveCanExecute, this);
             NewCommand = new RelayCommand(NewCommandExecute, NewCanExecute, this);
+            OpenTemplateCommand = new RelayCommand(OpenTemplateExecute, ()=>(CurrentProperty!=null)&&(CurrentProperty.BodyID!=0),this);
         }
 
         private void _mailProperties_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
+            {
                 foreach (MailProperty item in e.NewItems)
+                {
                     item.PropertyChanged += MailPropertyInCollection_Changed;
+                }
+            }
             if (e.OldItems != null)
+            {
                 foreach (MailProperty item in e.OldItems)
+                {
                     item.PropertyChanged -= MailPropertyInCollection_Changed;
+                }
+            }
         }
 
         private void MailPropertyInCollection_Changed(object sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged();
-            //MessageBox.Show("!!!");
         }
 
 
@@ -63,7 +71,7 @@ namespace MHConfigurator.ViewModels
         private MailProperty _originalCurrentProperty;
         //private bool _currentPropertyChanged = false;
         
-        private List<MailsTemplate> _mailsTemplates;
+        private ObservableCollection<MailTemplate> _mailsTemplates;
         private int _selectedMailTemplate;
 
         #endregion
@@ -152,20 +160,20 @@ namespace MHConfigurator.ViewModels
             set
             {
                 _mailProperties = value;
-                //OnPropertyChanged(new PropertyChangedEventArgs("MailProperties"));
                 OnPropertyChanged();
             }
         }
 
 
-        private bool _currentPropertyAlredyChange; 
+        private bool _currentPropertyAlredyChanged; 
         public MailProperty CurrentProperty
         {
             get { return _currentProperty; }
             set
             {
-                //TODO: Предусмотреть возможность прилетания нового объекта
-                if ((_originalCurrentProperty != null)&&(_originalCurrentProperty!=_currentProperty)&&!_currentPropertyAlredyChange) //Если выбран другой объект и есть несохранённые изменения
+                if ((_originalCurrentProperty != null) && 
+                    (_originalCurrentProperty!=_currentProperty) && 
+                    !_currentPropertyAlredyChanged) //Если выбран другой объект и есть несохранённые изменения
                 {
                     MessageBoxResult result = MessageBox.Show("Есть несохранённые изменения. Сохранить?", "Несохранённые изменения", MessageBoxButton.YesNo, MessageBoxImage.Question);
                     if (result == MessageBoxResult.Yes)
@@ -174,25 +182,16 @@ namespace MHConfigurator.ViewModels
                     }
                     else
                     {
-                        _currentPropertyAlredyChange = true;
-                        MailProperties[MailProperties.IndexOf(CurrentProperty)] = _originalCurrentProperty; //Находим в коллекции изменённый объект и заменить его оригиналом
+                        _currentPropertyAlredyChanged = true; //При замене элемента в коллекции мы повторно попадаем в этот сеттер. Для этого нужна эта переменная (по сути костыль, но лучше не придумал).
+                        MailProperties[MailProperties.IndexOf(CurrentProperty)] = _originalCurrentProperty; //Находим в коллекции изменённый объект и замяем его оригиналом
                     }
-                    //Выдать сообщение, что изменения не сохранены
-                    //В зависимости от результата или:
-                    //1. Найти в коллекции изменённый объект и заменить его оригиналом
-                    //2. Вызвать метод DAL для сохранения _currentProperty
                 }
-                _currentPropertyAlredyChange = false;
+                _currentPropertyAlredyChanged = false; //объяснение этого костыля немного выше
                 
                 _originalCurrentProperty = value!=null ? Helper.DeepClone(value) : null; //Делаем резервную копию
-
-                //SelectedMailTemplate = value.BodyID; //выставляем id шаблона
-
-
                 _currentProperty = value;
                 
-                //OnPropertyChanged(new PropertyChangedEventArgs("CurrentProperty"));
-                OnPropertyChanged();
+                OnPropertyChanged(new PropertyChangedEventArgs("CurrentProperty"));
             }
         }
 
@@ -200,7 +199,7 @@ namespace MHConfigurator.ViewModels
 
 
 
-        public List<MailsTemplate> MailsTemplates
+        public ObservableCollection<MailTemplate> MailsTemplates
         {
             get { return _mailsTemplates; }
             set
@@ -227,21 +226,22 @@ namespace MHConfigurator.ViewModels
         public ICommand NewCommand { get; private set; }
         public ICommand SaveCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
+        public ICommand OpenTemplateCommand { get; private set; }
 
         #region Execute
 
         private void CancelCommandExecute(object cmdParameter)
         {
             if (!NewModeOn && (_originalCurrentProperty != null) && (CurrentProperty != null) &&
-                (_originalCurrentProperty != CurrentProperty))
+                (_originalCurrentProperty != CurrentProperty)) //
             {
-                _currentPropertyAlredyChange = true; //Нужно, чтобы подавить выдачу popup'a при изменении свойства
+                _currentPropertyAlredyChanged = true; // Нужно, чтобы подавить выдачу popup'a при изменении свойства
                 MailProperties[MailProperties.IndexOf(CurrentProperty)] = _originalCurrentProperty;
             }
             else if(NewModeOn)
             {
                 NewModeOn = false;
-                _currentPropertyAlredyChange = true;
+                _currentPropertyAlredyChanged = true;
                 CurrentProperty = null;
             }
 
@@ -256,36 +256,57 @@ namespace MHConfigurator.ViewModels
             CurrentProperty = new MailProperty();
             OnPropertyChanged();
         }
-
         private void SaveCommandExecute(object cmdParameter)
         {
             //TODO: Проверка на существование элемента (задаётся доп. вопрос, другая добавка в список) 
-            DAL.GetDAL().SaveMailProperty(CurrentProperty);
-            _originalCurrentProperty = Helper.DeepClone(CurrentProperty);
-            if (NewModeOn)
+            if (NewModeOn && DAL.GetDAL().GetMailPropertyById(CurrentProperty.ButtonID) != null) //Если сохраняем новый объект, а объект с таким же id уже есть в базе
             {
+                MessageBoxResult result = MessageBox.Show("Шаблон с таким id уже есть в базе. Хотите заменить?", "Замена шаблона", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    NewModeOn = false;
+
+                    DAL.GetDAL().SaveMailProperty(CurrentProperty);
+                    _originalCurrentProperty = Helper.DeepClone(CurrentProperty);
+
+                    var localProp = MailProperties.FirstOrDefault(property => property.ButtonID == CurrentProperty.ButtonID);
+                    if (localProp != null)
+                    {
+                        _currentPropertyAlredyChanged = true;
+                        MailProperties[MailProperties.IndexOf(localProp)] = CurrentProperty;
+                    }
+                }
+            }
+            else if(NewModeOn)
+            {
+                DAL.GetDAL().SaveMailProperty(CurrentProperty);
+                _originalCurrentProperty = Helper.DeepClone(CurrentProperty);
+
                 NewModeOn = false;
-                _currentPropertyAlredyChange = true;
+                _currentPropertyAlredyChanged = true;
                 MailProperties.Add(CurrentProperty);
                 CurrentProperty = null;
 
                 MailProperties = new ObservableCollection<MailProperty>(MailProperties.OrderBy(x => x.ButtonID));
-                /*
-                var temp = DAL.GetDAL().MailPropertys;
-                foreach (var property in temp)
-                {
-                    if (!MailProperties.Contains(property))
-                    {
-                        MailProperties.Add(property);
-                        MailProperties = new ObservableCollection<MailProperty>(MailProperties.OrderBy(x=>x.ButtonID));
-                    }
-                }*/   
             }
-           
+            else
+            {
+                DAL.GetDAL().SaveMailProperty(CurrentProperty);
+                _originalCurrentProperty = Helper.DeepClone(CurrentProperty);
+            }
+
+
+            //DAL.GetDAL().SaveMailProperty(CurrentProperty);
+            //_originalCurrentProperty = Helper.DeepClone(CurrentProperty);
             
             OnPropertyChanged(new PropertyChangedEventArgs("MailProperties"));
             OnPropertyChanged(new PropertyChangedEventArgs("CurrentProperty"));
             CommandManager.InvalidateRequerySuggested();
+        }
+
+        private void OpenTemplateExecute()
+        {
+            
         }
 
         #endregion
