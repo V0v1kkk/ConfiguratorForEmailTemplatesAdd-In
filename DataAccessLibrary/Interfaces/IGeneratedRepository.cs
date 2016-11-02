@@ -8,6 +8,6 @@ namespace DataAccessLibrary.Interfaces
 {
     public interface IGeneratedRepository : IRepository<Generated>
     {
-        List<long> GetUsedTemplates();
+        List<long> GetUsedProperties();
     }
 }

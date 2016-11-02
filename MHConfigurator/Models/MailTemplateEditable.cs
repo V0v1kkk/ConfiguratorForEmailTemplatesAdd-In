@@ -5,6 +5,7 @@ using HtmlAgilityPack;
 
 namespace MHConfigurator.Models
 {
+    [Serializable]
     public class MailTemplateEditable : MailTemplate //Декоратор над MailTemplate для удобного редактирования HTML шаблона
     {
         public MailTemplateEditable()
@@ -43,16 +44,16 @@ namespace MHConfigurator.Models
             get { return _downIndent; }
             set
             {
-                if(_downIndent==value) return;
-                if ((value == _downIndent + 1) && (CutDown()))
+                if (value < 0) value = 0;
+
+                if (value - _downIndent > 0) //Если значение увеличилось
                 {
-                    _downIndent = value;
+                    _downIndent += CutDown(value - _downIndent);
                     OnPropertyChanged();
                 }
-                else if (value == _downIndent - 1)
+                else if (_downIndent - value > 0) //если уменьшилось
                 {
-                    BackDown();
-                    _downIndent = value;
+                    _downIndent -= BackDown(_downIndent - value);
                     OnPropertyChanged();
                 }
             }
@@ -64,16 +65,16 @@ namespace MHConfigurator.Models
             get { return _upIndent; }
             set
             {
-                if(_upIndent==value) return;
-                if ((value == _upIndent + 1)&&(CutUp()))
+                if (value < 0) value = 0;
+
+                if (value - _upIndent > 0) //Если значение увеличилось
                 {
-                    _upIndent = value;
+                    _upIndent += CutUp(value - _upIndent);
                     OnPropertyChanged();
                 }
-                else if (value == _upIndent - 1)
+                else if (_upIndent - value > 0) //если уменьшилось
                 {
-                    BackUp();
-                    _upIndent = value;
+                    _upIndent -= BackUp(_upIndent - value);
                     OnPropertyChanged();
                 }
             }
@@ -85,45 +86,57 @@ namespace MHConfigurator.Models
         private int _downIndent;
 
 
-        public bool CutUp()
+        public int CutUp(int count = 1)
         {
+            int cuttingcounter = 0;
+
             var doc = new HtmlDocument();
             doc.LoadHtml(TemplateBody);
 
             var paragraphs = doc.DocumentNode.SelectNodes("//p");
             if (paragraphs != null)
             {
+                
                 foreach (var tag in paragraphs)
                 {
-                    if (tag.Attributes["class"] != null && string.Compare(tag.Attributes["class"].Value, "MsoNormal", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    //if (tag.Attributes["class"] != null && string.Compare(tag.Attributes["class"].Value, "MsoNormal", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    //if (tag.Attributes["class"] != null && !((tag.Attributes["class"].Value.Contains("WordSection")) || (tag.Attributes["class"].Value.Contains("Table"))))
+                    if (cuttingcounter < count)
                     {
-                        string replasestring = $"< !--0{UpIndent}-- >";
-                        _upPartsStack.Push(new Tuple<string, string>(tag.ToString(), replasestring));
+                        string replasestring = $"<!-- 0{UpIndent + cuttingcounter} -->";
+                        _upPartsStack.Push(new Tuple<string, string>(tag.OuterHtml, replasestring));
 
                         var parent = tag.ParentNode;
                         HtmlNode mark = doc.CreateTextNode(replasestring);
                         parent.ReplaceChild(mark, tag);
 
-                        doc.Save(TemplateBody);
+                        TemplateBody = doc.DocumentNode.OuterHtml;
 
-                        return true;
+                        cuttingcounter++;
                     }
                 }
             }
-            return false;
+            return cuttingcounter;
         }
 
 
-        public void BackUp()
+        public int BackUp(int count = 1)
         {
-            var tuple = _upPartsStack.Pop();
-            TemplateBody = TemplateBody.Replace(tuple.Item2, tuple.Item1);
+            for (int i = 0; i < count; i++)
+            {
+                if (_upPartsStack.Count == 0) return i;
+                var tuple = _upPartsStack.Pop();
+                TemplateBody = TemplateBody.Replace(tuple.Item2, tuple.Item1);
+            }
+            return count;
         }
 
 
 
-        public bool CutDown()
+        public int CutDown(int count = 1)
         {
+            int cuttingcounter = 0;
+
             var doc = new HtmlDocument();
             doc.LoadHtml(TemplateBody);
 
@@ -132,29 +145,54 @@ namespace MHConfigurator.Models
             {
                 foreach (var tag in paragraphs.Reverse())
                 {
-                    if (tag.Attributes["class"] != null && string.Compare(tag.Attributes["class"].Value, "MsoNormal", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    if (cuttingcounter < count)
                     {
-                        string replasestring = $"< !--1{DownIndent}-- >";
-                        _downPartsStack.Push(new Tuple<string, string>(tag.ToString(), replasestring));
+                        string replasestring = $"<!-- 1{DownIndent + cuttingcounter} -->";
+                        _downPartsStack.Push(new Tuple<string, string>(tag.OuterHtml, replasestring));
 
                         var parent = tag.ParentNode;
                         HtmlNode mark = doc.CreateTextNode(replasestring);
                         parent.ReplaceChild(mark, tag);
 
-                        doc.Save(TemplateBody);
+                        TemplateBody = doc.DocumentNode.OuterHtml;
 
-                        return true;
+                        cuttingcounter++;
                     }
                 }
             }
-            return false;
+            return cuttingcounter;
         }
 
 
-        public void BackDown()
+        public int BackDown(int count = 1)
         {
-            var tuple = _downPartsStack.Pop();
-            TemplateBody = TemplateBody.Replace(tuple.Item2, tuple.Item1);
+            for (int i = 0; i < count; i++)
+            {
+                if (_downPartsStack.Count == 0) return i;
+                var tuple = _downPartsStack.Pop();
+                TemplateBody = TemplateBody.Replace(tuple.Item2, tuple.Item1);
+            }
+            return count;
+        }
+
+
+        public void ClearIndents()
+        {
+            _upIndent = 0;
+            _downIndent = 0;
+            _upPartsStack.Clear();
+            _downPartsStack.Clear();
+            OnPropertyChanged("UpIndent");
+            OnPropertyChanged("DownIndent");
+        }
+
+        public string GetCleanHtmlForSave()
+        {
+            if (string.IsNullOrWhiteSpace(TemplateBody)) return "";
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(TemplateBody);
+            doc.DocumentNode.Descendants().Where(n => n.NodeType == HtmlNodeType.Comment).ToList().ForEach(n => n.Remove());
+            return doc.DocumentNode.OuterHtml;
         }
     }
 }

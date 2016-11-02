@@ -6,6 +6,8 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
+using MugenMvvmToolkit;
 
 namespace MHConfigurator
 {
@@ -46,6 +48,22 @@ namespace MHConfigurator
                     CultureInfo.CreateSpecificCulture("ru-RU"))); // #%tomorrow - завтрашний день месяц и год в формате "01.05.2015"
 
             return input;
+        }
+
+        public static string DeleteLinksInHtml(string html)
+        {
+            try
+            {
+                var doc = new HtmlDocument();
+                doc.LoadHtml(html);
+                doc.DocumentNode.SelectNodes("//link").ForEach(x => x.Remove());
+                return doc.DocumentNode.OuterHtml;
+            }
+            catch (Exception exception)
+            {
+                //todo: log
+                return "";
+            }
         }
     }
 }

@@ -7,10 +7,26 @@
         xmlns:mhConfigurator="clr-namespace:MHConfigurator"
         xmlns:xcdg="http://schemas.xceed.com/wpf/xaml/datagrid"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-        Title="MailEditorView"
-        Width="800"
-        Height="600"
+        Title="Редактор HTML шаблонов"
+        Width="1000"
+        Height="700"
+        MinWidth="700"
+        MinHeight="600"
         mc:Ignorable="d">
+
+    <Window.Resources>
+
+        <ControlTemplate x:Key="ComboBoxValidationErrorTemplate">
+            <DockPanel>
+                <Border BorderBrush="CornflowerBlue" BorderThickness="2">
+                    <AdornedElementPlaceholder />
+                </Border>
+            </DockPanel>
+        </ControlTemplate>
+
+    </Window.Resources>
+
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -18,85 +34,166 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0"
-                    Grid.ColumnSpan="2"
-                    Margin="7"
-                    Orientation="Horizontal">
-            <TextBlock Margin="5,5,2,5"
-                       HorizontalAlignment="Left"
-                       DockPanel.Dock="Left">
+        <Grid Grid.Row="0"
+              Grid.ColumnSpan="2"
+              Margin="7">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Margin="5,5,2,5"
+                       HorizontalAlignment="Left">
                 Путь к html файлу:
             </TextBlock>
-            <TextBox Width="457"
+            <TextBox Grid.Column="1"
                      Margin="2,2,2,2"
-                     HorizontalAlignment="Stretch" />
-            <Button Width="100"
+                     HorizontalAlignment="Stretch"
+                     HorizontalContentAlignment="Center"
+                     VerticalContentAlignment="Center"
+                     Background="GhostWhite"
+                     IsReadOnly="True"
+                     Text="{Binding FilePath,
+                                    Mode=OneWay}" />
+            <Button Grid.Column="2"
+                    Width="200"
                     Margin="2"
                     HorizontalAlignment="Right"
-                    DockPanel.Dock="Right">
-                Открыть
+                    Click="{DataBinding OpenFileCommand}"
+                    TabIndex="0">
+                Загрузить письмо html-формате
             </Button>
-            <Button Width="100"
+
+        </Grid>
+
+        <Border Grid.Row="0"
+                BorderBrush="Black"
+                BorderThickness="1" />
+
+        <Border Grid.Row="1"
+                BorderBrush="Black"
+                BorderThickness="1" />
+
+        <WebBrowser Grid.Row="1" mhConfigurator:WebBrowserHelper.Body="{Binding Html}" />
+        <Border Grid.Row="2"
+                BorderBrush="Black"
+                BorderThickness="1" />
+
+
+        <Grid Grid.Row="2"
+              Grid.ColumnSpan="2"
+              Margin="7">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Margin="5,5,2,5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center">
+                Отступ сверху:
+            </TextBlock>
+            <xctk:IntegerUpDown Grid.Column="1"
+                                Width="60"
+                                Margin="2"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Maximum="200"
+                                Minimum="0"
+                                TabIndex="1"
+                                Value="{Binding TemplateEditable.UpIndent,
+                                                Mode=TwoWay}" />
+
+            <TextBlock Grid.Column="2"
+                       Margin="5,5,2,5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center">
+                Отступ снизу:
+            </TextBlock>
+            <xctk:IntegerUpDown Grid.Column="3"
+                                Width="60"
+                                Margin="2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Maximum="200"
+                                Minimum="0"
+                                TabIndex="2"
+                                Value="{Binding TemplateEditable.DownIndent,
+                                                Mode=TwoWay}" />
+
+            <TextBlock Grid.Column="4"
+                       Margin="5,5,2,5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center">
+                Описание:
+            </TextBlock>
+            <TextBox Grid.Column="5"
+                     Height="Auto"
+                     Margin="2"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch"
+                     HorizontalContentAlignment="Left"
+                     VerticalContentAlignment="Center"
+                     AcceptsReturn="True"
+                     TabIndex="3"
+                     Text="{DataBinding Path=TemplateDescription,
+                                        Mode=TwoWay,
+                                        ValidatesOnNotifyDataErrors=True,
+                                        UpdateSourceTrigger=PropertyChanged}"
+                     TextWrapping="Wrap" />
+
+            <TextBlock Grid.Column="6"
+                       Margin="5,5,2,5"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center">
+                ID:
+            </TextBlock>
+
+
+            <ComboBox Grid.Column="7"
+                      Width="100"
+                      Margin="2"
+                      VerticalAlignment="Center"
+                      DisplayMemberPath="TemplateId"
+                      IsEditable="True"
+                      IsEnabled="{DataBinding '!WorkWithExistingTemplate'}"
+                      ItemsSource="{Binding MailsTemplatesEmpty}"
+                      SelectedItem="{Binding CurrentEmptyTemplate,
+                                             Mode=TwoWay}"
+                      SelectedValue="{Binding TemplateEditable.TemplateId,
+                                              Mode=TwoWay}"
+                      SelectedValuePath="TemplateId"
+                      TabIndex="4"
+                      Text="{Binding NewEmptyMailTemplate,
+                                     UpdateSourceTrigger=LostFocus,
+                                     Mode=OneWayToSource}"
+                      Validation.ErrorTemplate="{StaticResource ComboBoxValidationErrorTemplate}" />
+
+
+            <Button Grid.Column="8"
+                    Width="100"
                     Margin="2"
-                    HorizontalAlignment="Right"
-                    DockPanel.Dock="Right">
-                Загрузить
-            </Button>
-        </StackPanel>
-
-        <WebBrowser Grid.Row="1" mhConfigurator:WebBrowserHelper.Body="{Binding BodyLink}" />
-
-
-        <StackPanel Grid.Row="2"
-                    Grid.ColumnSpan="2"
-                    Margin="7"
-                    Orientation="Horizontal">
-
-
-            <Button Width="100"
-                    Margin="2"
-                    HorizontalAlignment="Right"
-                    DockPanel.Dock="Right">
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Stretch"
+                    Click="{DataBinding SaveCommand}"
+                    IsTabStop="True"
+                    TabIndex="5">
                 Сохранить
             </Button>
 
-            <ComboBox Width="100"
-                      Margin="2"
-                      IsEditable="True" />
-
-            <TextBlock Margin="2,5,2,5"
-                       HorizontalAlignment="Left"
-                       DockPanel.Dock="Left">
-                Описание:
-            </TextBlock>
-            <TextBox Width="215"
-                     Margin="2,2,2,2"
-                     HorizontalAlignment="Stretch"
-                     Text="{Binding TemplateDescription}" />
-
-            <TextBlock Margin="10,5,2,5"
-                       HorizontalAlignment="Left"
-                       DockPanel.Dock="Left">
-                Отступ сверху:
-            </TextBlock>
-            <xctk:IntegerUpDown Width="60"
-                                Maximum="200"
-                                Minimum="0"
-                                Value="{Binding UpMargin}" />
-
-            <TextBlock Margin="2,5,2,5"
-                       HorizontalAlignment="Left"
-                       DockPanel.Dock="Left">
-                Отступ снизу:
-            </TextBlock>
-            <xctk:IntegerUpDown Width="60"
-                                Maximum="200"
-                                Minimum="0"
-                                Value="{Binding DownMargin}" />
 
 
-
-        </StackPanel>
+        </Grid>
 
     </Grid>
 </Window>

@@ -13,13 +13,14 @@ using System.Windows.Input;
 using MHConfigurator.Models;
 using System.Windows;
 using System.Windows.Navigation;
+using MugenMvvmToolkit.Interfaces.Callbacks;
 
 namespace MHConfigurator.ViewModels
 {
-    public class MainViewModel : ViewModelBase
+    public class MailPropertiesViewModel : ViewModelBase
     {
 
-        public MainViewModel()
+        public MailPropertiesViewModel()
         {
             _mailProperties = new ObservableCollection<MailProperty>(DAL.GetDAL().MailPropertys);
             foreach (var property in _mailProperties)
@@ -60,7 +61,7 @@ namespace MHConfigurator.ViewModels
         }
 
 
-        #region Fields
+        #region Properties
 
         #region Backing Fields
 
@@ -74,7 +75,10 @@ namespace MHConfigurator.ViewModels
         private ObservableCollection<MailTemplate> _mailsTemplates;
         private int _selectedMailTemplate;
 
+        private bool _windowVisible = true;
+
         #endregion
+
         public string SearchString
         {
             get
@@ -153,7 +157,6 @@ namespace MHConfigurator.ViewModels
 
             }
         }
-
         public ObservableCollection<MailProperty> MailProperties
         {
             get { return _mailProperties; }
@@ -163,8 +166,6 @@ namespace MHConfigurator.ViewModels
                 OnPropertyChanged();
             }
         }
-
-
         private bool _currentPropertyAlredyChanged; 
         public MailProperty CurrentProperty
         {
@@ -194,11 +195,6 @@ namespace MHConfigurator.ViewModels
                 OnPropertyChanged(new PropertyChangedEventArgs("CurrentProperty"));
             }
         }
-
-
-
-
-
         public ObservableCollection<MailTemplate> MailsTemplates
         {
             get { return _mailsTemplates; }
@@ -215,6 +211,16 @@ namespace MHConfigurator.ViewModels
             {
                 _selectedMailTemplate = value;
                 CurrentProperty.BodyID = value;
+                OnPropertyChanged();
+            }
+        }
+        public Visibility WindowVisibility
+        {
+            get { return _windowVisible ? Visibility.Visible : Visibility.Collapsed; }
+            set
+            {
+                if (value == Visibility.Visible) _windowVisible = true;
+                else if (value == Visibility.Collapsed) _windowVisible = false;
                 OnPropertyChanged();
             }
         }
@@ -304,9 +310,27 @@ namespace MHConfigurator.ViewModels
             CommandManager.InvalidateRequerySuggested();
         }
 
-        private void OpenTemplateExecute()
+        
+        
+
+        private async void OpenTemplateExecute()
         {
-            
+            var htmlEditor = GetViewModel<MailEditorViewModel>();
+            htmlEditor.MailEditorViewModelSetup(CurrentProperty.BodyID);
+
+            WindowVisibility = Visibility.Collapsed;
+            IAsyncOperation<bool> asyncOperation = htmlEditor.ShowAsync();
+            await asyncOperation;
+            if(htmlEditor.TemplateChanged)
+            {
+                MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().GetEmptyMailTemplates()); //В случае изменений переимпортируем пустые шаблоны (вдруг изменилось описание)
+
+                var temp = CurrentProperty; //Костыль для обновления значения в combobox'е
+                CurrentProperty = null;
+                CurrentProperty = temp;
+                OnPropertyChanged();
+            }
+            WindowVisibility = Visibility.Visible;
         }
 
         #endregion
@@ -326,7 +350,7 @@ namespace MHConfigurator.ViewModels
 
         private bool _cancelCanExecute = true;
         private bool _saveCanExecute = true;
-        private bool _newModeOn = false;
+        private bool _newModeOn;
         
 
 

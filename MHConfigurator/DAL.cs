@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -22,7 +23,7 @@ namespace MHConfigurator
 
         private DAL()
         {
-            //Mapper.Initialize(cfg => cfg.CreateMap<DataAccessLibrary.MailPropertys, MailPropertys>().ForMember(destinationMember => destinationMember.Useful, x => x.MapFrom(m => GetDAL().GetUsedTemplatesNumbers().Contains(m.ButtonID))));
+            //Mapper.Initialize(cfg => cfg.CreateMap<DataAccessLibrary.MailPropertys, MailPropertys>().ForMember(destinationMember => destinationMember.Useful, x => x.MapFrom(m => GetDAL().GetUsedPropertiesNumbers().Contains(m.ButtonID))));
             
             //Mapper.AssertConfigurationIsValid();
 
@@ -32,7 +33,7 @@ namespace MHConfigurator
                     .ForMember(x => x.BodyID, expression => expression.MapFrom(property => (int) property.BodyID))
                     .ForMember(x => x.ButtonID, expression => expression.MapFrom(property => (int) property.ButtonID))
                     .ForMember(x => x.ReminderTime, expression => expression.MapFrom(property => DateTime.Parse(property.ReminderTime)))
-                    .ForMember(x => x.Useful, expression => expression.MapFrom(property => GetDAL().UsedTemplates.Contains(property.ButtonID)));
+                    .ForMember(x => x.Useful, expression => expression.MapFrom(property => GetDAL().UsedProperties.Contains(property.ButtonID)));
                 cfg.CreateMap<MailProperty, DataAccessLibrary.MailProperty>()
                     .ForMember(x => x.MailsTemplate, o => o.UseDestinationValue());
 
@@ -40,11 +41,14 @@ namespace MHConfigurator
                 cfg.CreateMap<DataAccessLibrary.MailsTemplate, MailTemplate>()
                 .ForMember(x=>x.TemplateDescription, o=>o.MapFrom(template => template.Templadescription))
                 .ForMember(x=>x.TemplateBodyRusFix, o=>o.Ignore())
-                .ForMember(x=>x.TemplateBody, o=>o.MapFrom(template => Encoding.GetEncoding("windows-1251")
-                .GetString(Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("windows-1251"), template.TemplateBody))));
+                .ForMember(x=>x.TemplateBody, o=>o.MapFrom(template => 
+                template.TemplateBody != null ? Encoding.GetEncoding("windows-1251").GetString(Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("windows-1251"),
+                        template.TemplateBody)) : "" ))
+                .ForMember(x=>x.Useful, o=>o.MapFrom(template => GetDAL().UsedTemplates.Contains(template.Templateid)));
                 cfg.CreateMap<MailTemplate, DataAccessLibrary.MailsTemplate>().ForMember(x=>x.MailPropertys, o=>o.UseDestinationValue())
                 .ForMember(x=>x.Templadescription, o=>o.MapFrom(template => template.TemplateDescription))
-                .ForMember(x=>x.TemplateBody,o=>o.MapFrom(template =>Encoding.Convert(Encoding.GetEncoding("windows-1251"), Encoding.UTF8, Encoding.GetEncoding("windows-1251").GetBytes(template.TemplateBody))));
+                .ForMember(x=>x.TemplateBody,o=>o.MapFrom(template =>Encoding.Convert(Encoding.GetEncoding("windows-1251"), Encoding.UTF8, Encoding.GetEncoding("windows-1251").GetBytes(template.TemplateBody))))
+                .ForMember(x=> x.MailPropertys, o=>o.UseDestinationValue());
             });
         }
 
@@ -81,6 +85,26 @@ namespace MHConfigurator
 
 
         private bool _GeneratedChanged = false; //От этого поля будет зависеть несколько полей (список задействованных шаблонов, сами генератед объекты (м.б. в виде дерева))
+        private List<long> _usedProperties = new List<long>();
+        public List<long> UsedProperties
+        {
+            get
+            {
+                if ((_usedProperties == null) || (_usedProperties.Count == 0) || (_GeneratedChanged))
+                {
+                    _usedProperties = GetUsedPropertiesNumbers();
+                }
+                return _usedProperties; 
+                
+            }
+            private set
+            {
+                _usedProperties = value;
+                //Писать в базу?
+            }
+        }
+
+
         private List<long> _usedTemplates = new List<long>();
         public List<long> UsedTemplates
         {
@@ -90,8 +114,8 @@ namespace MHConfigurator
                 {
                     _usedTemplates = GetUsedTemplatesNumbers();
                 }
-                return _usedTemplates; 
-                
+                return _usedTemplates;
+
             }
             private set
             {
@@ -99,6 +123,8 @@ namespace MHConfigurator
                 //Писать в базу?
             }
         }
+
+
 
 
         public MailProperty GetMailPropertyById(int id)
@@ -168,6 +194,7 @@ namespace MHConfigurator
 
         public bool SaveMailProperty(MailProperty mailProperty)
         {
+            if (mailProperty.ButtonID == 0) return false;
             using (var uow = new UnitOfWork())
             {
                 try
@@ -195,6 +222,7 @@ namespace MHConfigurator
 
         public bool DeleteMailProperty(MailProperty mailProperty)
         {
+            if (mailProperty.ButtonID == 0) return false;
             using (var uow = new UnitOfWork())
             {
                 try
@@ -220,16 +248,16 @@ namespace MHConfigurator
             }
         }
 
-    #region MailTemplates
+        #region MailTemplates
 
-        public List<long> GetUsedTemplatesNumbers()
+        public List<long> GetUsedPropertiesNumbers()
         {
             List<long> answer = new List<long>();
             using (var uow = new UnitOfWork())
             {
                 try
                 {
-                    answer = uow.Generated.GetUsedTemplates();
+                    answer = uow.Generated.GetUsedProperties();
                     return answer;
                 }
                 catch (Exception)
@@ -238,6 +266,25 @@ namespace MHConfigurator
                     return null;
                 }
                 
+            }
+        }
+
+        public List<long> GetUsedTemplatesNumbers()
+        {
+            List<long> answer = new List<long>();
+            using (var uow = new UnitOfWork())
+            {
+                try
+                {
+                    answer = uow.Propertys.GetUsedTemplates();
+                    return answer;
+                }
+                catch (Exception)
+                {
+                    //todo: Залогировать
+                    return null;
+                }
+
             }
         }
         public List<MailTemplate> GetEmptyMailTemplates()
@@ -278,7 +325,7 @@ namespace MHConfigurator
                 try
                 {
                     var templates = uow.Templates.GetAll();
-                    list.AddRange(templates.Select(mailsTemplate => Mapper.Map<DataAccessLibrary.MailsTemplate, MailTemplate>(mailsTemplate)).Where(x=>x.TemplateId!=0));
+                    list.AddRange(templates.Select(Mapper.Map<DataAccessLibrary.MailsTemplate, MailTemplate>).Where(x=>x.TemplateId!=0));
                     return list;
                 }
                 catch (Exception)
@@ -289,14 +336,14 @@ namespace MHConfigurator
             }
         }
 
-        public MailProperty GetMailTemplateById(int id)
+        public MailTemplate GetMailTemplateById(int id)
         {
             using (var uow = new UnitOfWork())
             {
-                MailProperty t = null;
+                MailTemplate t = null;
                 try
                 {
-                    t = Mapper.Map<DataAccessLibrary.MailsTemplate, MailsTemplates>(uow.Templates.Find(x => x.Templateid == id).First());
+                    t = Mapper.Map<DataAccessLibrary.MailsTemplate, MailTemplate>(uow.Templates.Find(x => x.Templateid == id).First());
 
                 }
                 catch (Exception)
@@ -306,6 +353,84 @@ namespace MHConfigurator
                 return t;
             }
         }
+
+        public bool SaveMailTemplate(MailTemplate mailsTemplate, bool newItem = false)
+        {
+            if (mailsTemplate.TemplateId == 0) return false;
+            using (var uow = new UnitOfWork())
+            {
+                try
+                {
+                    var dbProp =
+                        uow.Templates.Find(template => template.Templateid == mailsTemplate.TemplateId).FirstOrDefault();
+                    if (dbProp == null)
+                    {
+                        uow.Templates.Add(Mapper.Map<MailTemplate, DataAccessLibrary.MailsTemplate>(mailsTemplate));
+                    }
+                    else
+                    {
+                        Mapper.Map(mailsTemplate, dbProp);
+                    }
+                    uow.Complete();
+                    //_mailPropertyChanged = true;
+                    return true;
+                }
+                catch (Exception exception)
+                {
+                    //todo: Залогировать
+                    return false;
+                }
+            }
+        }
+
+        public bool DeleteMailTemplate(MailTemplate mailTemplate)
+        {
+            if (mailTemplate.TemplateId == 0) return false;
+            using (var uow = new UnitOfWork())
+            {
+                try
+                {
+                    var dbTemplate = uow.Templates.Find(template => template.Templateid == mailTemplate.TemplateId).FirstOrDefault();
+                    if (dbTemplate == null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        uow.Templates.Remove(dbTemplate);
+                    }
+                    uow.Complete();
+                    _mailPropertyChanged = true;
+                    return true;
+                }
+                catch (Exception exception)
+                {
+                    //todo: Залогировать
+                    return false;
+                }
+            }
+        }
+        #endregion
+
+
+
+        #region FSIO
+
+        public string GetHtmlFromFile(string path,Encoding encoding)
+        {
+            if (String.IsNullOrWhiteSpace(path)) return "";
+            encoding = encoding ?? Encoding.GetEncoding("windows-1251");
+            try
+            {
+                return File.ReadAllText(path, encoding);
+            }
+            catch (Exception)
+            {
+                //todo: Залогировать
+                return "";
+            }
+        }
+
         #endregion
     }
 }

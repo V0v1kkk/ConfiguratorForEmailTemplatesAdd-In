@@ -4,6 +4,7 @@ using MugenMvvmToolkit.Models;
 
 namespace MHConfigurator.Models
 {
+    [Serializable]
     public class MailTemplate : NotifyPropertyChangedBase
     {
         public int TemplateId
@@ -42,7 +43,11 @@ namespace MHConfigurator.Models
 
         public string TemplateBodyRusFix
         {
-            get { return TemplateBody.Replace(@"charset=windows-1251", @"charset=UTF-8"); }
+            get
+            {
+                if (string.IsNullOrWhiteSpace(TemplateBody)) return "";
+                return TemplateBody.Replace(@"charset=windows-1251", @"charset=UTF-8");
+            }
             set
             {
                 TemplateBody = value.Replace(@"charset=UTF-8", @"charset=windows-1251");
@@ -51,22 +56,26 @@ namespace MHConfigurator.Models
             }
         }
 
-        /*
-        private string GetBodyText()
-        {
-            return Encoding.GetEncoding("windows-1251")
-                .GetString(Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("windows-1251"), TemplateBody))
-                .Replace(@"charset=windows-1251", @"charset=UTF-8");
-        }
-        */
-
-
         public string FullDescription => TemplateDescription + " (" + TemplateId + ")";
+
+
+        public bool Useful
+        {
+            get { return _useful; }
+            set
+            {
+                if (value == _useful) return;
+                _useful = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         private readonly int _guid = new Guid().GetHashCode();
         private int _templateId;
         private string _templateDescription;
         private string _templateBody;
+        private bool _useful;
 
         public MailTemplate()
         {
@@ -86,6 +95,8 @@ namespace MHConfigurator.Models
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
+            // ReSharper disable once CanBeReplacedWithTryCastAndCheckForNull
+            if (obj is MailTemplate) return Equals((MailTemplate) obj);
             if (obj.GetType() != GetType()) return false;
             return Equals((MailTemplate) obj);
         }
@@ -97,12 +108,16 @@ namespace MHConfigurator.Models
 
         public static bool operator ==(MailTemplate left, MailTemplate right)
         {
-            return Equals(left, right);
+            if (ReferenceEquals(null, left) && ReferenceEquals(null, right)) return true;
+            if (ReferenceEquals(null, left)) return false;
+            if (ReferenceEquals(null, right)) return false;
+            if (ReferenceEquals(left, right)) return true;
+            return left.Equals(right);
         }
 
         public static bool operator !=(MailTemplate left, MailTemplate right)
         {
-            return !Equals(left, right);
+            return !(left == right);
         }
     }
 }

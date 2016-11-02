@@ -9,5 +9,7 @@ namespace DataAccessLibrary.Interfaces
     public interface IPropertyRepositorys : IRepository<MailProperty>
     {
         void SaveMailProprty(MailProperty mailProperty);
+
+        List<long> GetUsedTemplates();
     }
 }

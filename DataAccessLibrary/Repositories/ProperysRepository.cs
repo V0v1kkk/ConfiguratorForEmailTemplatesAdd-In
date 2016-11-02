@@ -24,5 +24,10 @@ namespace DataAccessLibrary.Repositories
         {
             //MHContext.MailPropertys.
         }
+
+        public List<long> GetUsedTemplates()
+        {
+            return MHContext.MailPropertys.Select(x => x.BodyID).Distinct().ToList();
+        }
     }
 }

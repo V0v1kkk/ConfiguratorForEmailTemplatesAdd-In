@@ -17,8 +17,12 @@ namespace MHConfigurator
 
         public override Type GetStartViewModelType()
         {
-            return typeof(TemplateViewerViewModel);
-            //return typeof (MainViewModel);
+
+
+            //return typeof(TemplateViewerViewModel);
+
+
+            return typeof (MailPropertiesViewModel);
             //return typeof(MailEditorViewModel);
         }
     }

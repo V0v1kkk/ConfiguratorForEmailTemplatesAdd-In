@@ -21,16 +21,10 @@ namespace MHConfigurator
 
         private static void OnBodyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
+            if(string.IsNullOrWhiteSpace((string) e.NewValue)) return;
+
             var webBrowser = (WebBrowser)d;
             webBrowser.NavigateToString((string)e.NewValue);
-
-
-            
-
-            
-            //var doc = (IHTMLDocument2) webBrowser.Document;
-            //doc.charset = "utf-8";
-            //webBrowser.Refresh();
         }
     }
 }

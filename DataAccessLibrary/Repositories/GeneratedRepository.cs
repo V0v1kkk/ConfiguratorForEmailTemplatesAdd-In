@@ -19,7 +19,7 @@ namespace DataAccessLibrary.Repositories
             { return Context as MassHelperEntities; }
         }
 
-        public List<long> GetUsedTemplates()
+        public List<long> GetUsedProperties()
         {
             var temp = MHContext.Generateds.Where(l => l.TemplateNO.HasValue).Select(x=>x.TemplateNO.Value).Distinct().ToList();
             return temp;
