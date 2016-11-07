@@ -62,6 +62,22 @@ namespace MHConfigurator
             return _instance;
         }
 
+        public string DatabasePath
+        {
+            get { return _databasePath; }
+            set
+            {
+                if (_databasePath != value)
+                {
+                    //todo: сделать так для всех получаемых сущностей
+                    _GeneratedChanged = true;
+                    _mailPropertyChanged = true;
+                }
+                _databasePath = value;
+                
+            }
+        }
+
 
         private bool _mailPropertyChanged; //Будет устанавливатся в случае записи в таблицу
         private List<MailProperty> _mailPropertys = new List<MailProperty>(); //Возможно нужно модель унаследовать от модели
@@ -106,6 +122,8 @@ namespace MHConfigurator
 
 
         private List<long> _usedTemplates = new List<long>();
+        private string _databasePath;
+
         public List<long> UsedTemplates
         {
             get
@@ -129,7 +147,7 @@ namespace MHConfigurator
 
         public MailProperty GetMailPropertyById(int id)
         {
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 MailProperty t = null;
                 try
@@ -147,7 +165,7 @@ namespace MHConfigurator
         /*
         public MailPropertys FindMailProperty(Expression<Func<MailPropertys, bool>> predicate) ////
         {
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 MailPropertys t = null;
                 try
@@ -164,7 +182,7 @@ namespace MHConfigurator
         }*/
         private List<MailProperty> GetMailPropertys()
         {
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 List<MailProperty> answer = new List<MailProperty>();
                 try
@@ -195,7 +213,7 @@ namespace MHConfigurator
         public bool SaveMailProperty(MailProperty mailProperty)
         {
             if (mailProperty.ButtonID == 0) return false;
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 try
                 {
@@ -223,7 +241,7 @@ namespace MHConfigurator
         public bool DeleteMailProperty(MailProperty mailProperty)
         {
             if (mailProperty.ButtonID == 0) return false;
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 try
                 {
@@ -253,7 +271,7 @@ namespace MHConfigurator
         public List<long> GetUsedPropertiesNumbers()
         {
             List<long> answer = new List<long>();
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 try
                 {
@@ -272,7 +290,7 @@ namespace MHConfigurator
         public List<long> GetUsedTemplatesNumbers()
         {
             List<long> answer = new List<long>();
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 try
                 {
@@ -290,7 +308,7 @@ namespace MHConfigurator
         public List<MailTemplate> GetEmptyMailTemplates()
         {
             //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 List<MailTemplate> list = new List<MailTemplate>();
                 try
@@ -319,7 +337,7 @@ namespace MHConfigurator
         public List<MailTemplate> GetMailTemplates()
         {
             //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 List<MailTemplate> list = new List<MailTemplate>();
                 try
@@ -338,7 +356,7 @@ namespace MHConfigurator
 
         public MailTemplate GetMailTemplateById(int id)
         {
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 MailTemplate t = null;
                 try
@@ -357,7 +375,7 @@ namespace MHConfigurator
         public bool SaveMailTemplate(MailTemplate mailsTemplate, bool newItem = false)
         {
             if (mailsTemplate.TemplateId == 0) return false;
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 try
                 {
@@ -386,7 +404,7 @@ namespace MHConfigurator
         public bool DeleteMailTemplate(MailTemplate mailTemplate)
         {
             if (mailTemplate.TemplateId == 0) return false;
-            using (var uow = new UnitOfWork())
+            using (var uow = new UnitOfWork(DatabasePath))
             {
                 try
                 {
@@ -413,8 +431,27 @@ namespace MHConfigurator
         #endregion
 
 
+        public bool TestConnection()
+        {
+            if (UnitOfWork.TestConnection(DatabasePath) && GetEmptyMailTemplates() != null) return true;
+            return false;
+        }
 
-        #region FSIO
+        public bool TestConnection(string databasePath)
+        {
+            var temp = DatabasePath;
+            DatabasePath = databasePath;
+            if (UnitOfWork.TestConnection(databasePath) && GetEmptyMailTemplates() != null)
+            {
+                DatabasePath = temp;
+                return true;
+            }
+            DatabasePath = temp;
+            return false;
+        }
+
+
+        #region FileSystemIO
 
         public string GetHtmlFromFile(string path,Encoding encoding)
         {
@@ -428,6 +465,28 @@ namespace MHConfigurator
             {
                 //todo: Залогировать
                 return "";
+            }
+        }
+
+        public bool MakeBackUpDb(string pathToDb, string pathToBackup = null)
+        {
+            //todo:ведение журнала бекапов
+            try
+            {
+                if (pathToBackup == null)
+                    pathToBackup = Environment.GetEnvironmentVariable("LOCALAPPDATA") + @"\MailsTemplatesAddinConfigurator\backup";
+                Directory.CreateDirectory(pathToBackup);
+                pathToBackup += "\\";
+                pathToBackup += $"{DateTime.Now:dd-MM-yyyy_hh-mm-ss}";
+                pathToBackup += "_";
+                pathToBackup += Path.GetFileName(pathToDb);
+                File.Copy(pathToDb,pathToBackup);
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 

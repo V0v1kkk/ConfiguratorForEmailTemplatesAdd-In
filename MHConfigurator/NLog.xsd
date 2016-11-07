@@ -710,8 +710,8 @@
       <xs:extension base="Target">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
           <xs:element name="name" minOccurs="0" maxOccurs="1" type="xs:string" />
-          <xs:element name="connectionString" minOccurs="0" maxOccurs="1" type="Layout" />
-          <xs:element name="connectionStringName" minOccurs="0" maxOccurs="1" type="xs:string" />
+          <xs:element name="databasePath" minOccurs="0" maxOccurs="1" type="Layout" />
+          <xs:element name="databasePathName" minOccurs="0" maxOccurs="1" type="xs:string" />
           <xs:element name="dbDatabase" minOccurs="0" maxOccurs="1" type="Layout" />
           <xs:element name="dbHost" minOccurs="0" maxOccurs="1" type="Layout" />
           <xs:element name="dbPassword" minOccurs="0" maxOccurs="1" type="Layout" />
@@ -731,14 +731,14 @@
             <xs:documentation>Name of the target.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="connectionString" type="SimpleLayoutAttribute">
+        <xs:attribute name="databasePath" type="SimpleLayoutAttribute">
           <xs:annotation>
             <xs:documentation>Connection string. When provided, it overrides the values specified in DBHost, DBUserName, DBPassword, DBDatabase.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="connectionStringName" type="xs:string">
+        <xs:attribute name="databasePathName" type="xs:string">
           <xs:annotation>
-            <xs:documentation>Name of the connection string (as specified in &lt;connectionStrings&gt; configuration section.</xs:documentation>
+            <xs:documentation>Name of the connection string (as specified in &lt;databasePaths&gt; configuration section.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="dbDatabase" type="SimpleLayoutAttribute">
@@ -804,7 +804,7 @@
   <xs:complexType name="NLog.Targets.DatabaseCommandInfo">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element name="commandType" minOccurs="0" maxOccurs="1" type="System.Data.CommandType" />
-      <xs:element name="connectionString" minOccurs="0" maxOccurs="1" type="Layout" />
+      <xs:element name="databasePath" minOccurs="0" maxOccurs="1" type="Layout" />
       <xs:element name="ignoreFailures" minOccurs="0" maxOccurs="1" type="xs:boolean" />
       <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded" type="NLog.Targets.DatabaseParameterInfo" />
       <xs:element name="text" minOccurs="0" maxOccurs="1" type="Layout" />
@@ -814,7 +814,7 @@
         <xs:documentation>Type of the command.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="connectionString" type="SimpleLayoutAttribute">
+    <xs:attribute name="databasePath" type="SimpleLayoutAttribute">
       <xs:annotation>
         <xs:documentation>Connection string to run the command against. If not provided, connection string from the target is used.</xs:documentation>
       </xs:annotation>

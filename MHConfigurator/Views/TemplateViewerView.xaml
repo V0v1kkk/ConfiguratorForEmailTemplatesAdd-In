@@ -12,8 +12,10 @@
         Height="700"
         MinWidth="600"
         MinHeight="400"
+        Icon="../Images/spannerIcon.png"
         Visibility="{Binding WindowVisibility,
                              Mode=TwoWay}"
+        WindowStartupLocation="CenterScreen"
         mc:Ignorable="d">
     <Grid>
         <Grid.RowDefinitions>
@@ -83,7 +85,13 @@
                     Click="{DataBinding AddCommand}"
                     DockPanel.Dock="Left"
                     TabIndex="1">
-                Добавить
+                <StackPanel Orientation="Horizontal">
+                    <Image Width="15"
+                           Margin="5"
+                           VerticalAlignment="Center"
+                           Source="../Images/circleAddImage.png" />
+                    <TextBlock VerticalAlignment="Center" Text="Добавить" />
+                </StackPanel>
             </Button>
 
             <Button Width="150"
@@ -92,7 +100,14 @@
                     Click="{DataBinding EditCommand}"
                     DockPanel.Dock="Left"
                     TabIndex="2">
-                Изменить
+                <StackPanel Orientation="Horizontal">
+                    <Image Width="15"
+                           Margin="5"
+                           VerticalAlignment="Center"
+                           Source="../Images/outImage.png" />
+                    <TextBlock VerticalAlignment="Center" Text="Изменить" />
+                </StackPanel>
+
             </Button>
 
             <Button Width="150"
@@ -101,7 +116,13 @@
                     Click="{DataBinding DeleteCommand}"
                     DockPanel.Dock="Left"
                     TabIndex="3">
-                Удалить
+                <StackPanel Orientation="Horizontal">
+                    <Image Width="15"
+                           Margin="5"
+                           VerticalAlignment="Center"
+                           Source="../Images/circleSubtractImage.png" />
+                    <TextBlock VerticalAlignment="Center" Text="Удалить" />
+                </StackPanel>
             </Button>
 
             <CheckBox Margin="5"

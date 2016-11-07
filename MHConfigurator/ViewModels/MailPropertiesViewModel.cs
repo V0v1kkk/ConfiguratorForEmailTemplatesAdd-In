@@ -217,8 +217,11 @@ namespace MHConfigurator.ViewModels
         public Visibility WindowVisibility
         {
             get { return _windowVisible ? Visibility.Visible : Visibility.Collapsed; }
-            set
+            private set
             {
+                if (value == Visibility.Visible && _windowVisible) return;
+                if (value != Visibility.Visible && !_windowVisible) return;
+
                 if (value == Visibility.Visible) _windowVisible = true;
                 else if (value == Visibility.Collapsed) _windowVisible = false;
                 OnPropertyChanged();
@@ -315,22 +318,24 @@ namespace MHConfigurator.ViewModels
 
         private async void OpenTemplateExecute()
         {
-            var htmlEditor = GetViewModel<MailEditorViewModel>();
-            htmlEditor.MailEditorViewModelSetup(CurrentProperty.BodyID);
-
-            WindowVisibility = Visibility.Collapsed;
-            IAsyncOperation<bool> asyncOperation = htmlEditor.ShowAsync();
-            await asyncOperation;
-            if(htmlEditor.TemplateChanged)
+            using(var htmlEditor = GetViewModel<MailEditorViewModel>())
             {
-                MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().GetEmptyMailTemplates()); //В случае изменений переимпортируем пустые шаблоны (вдруг изменилось описание)
+                htmlEditor.MailEditorViewModelSetup(CurrentProperty.BodyID);
 
-                var temp = CurrentProperty; //Костыль для обновления значения в combobox'е
-                CurrentProperty = null;
-                CurrentProperty = temp;
-                OnPropertyChanged();
+                WindowVisibility = Visibility.Collapsed;
+                IAsyncOperation<bool> asyncOperation = htmlEditor.ShowAsync();
+                await asyncOperation;
+                if(htmlEditor.TemplateChanged)
+                {
+                    MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().GetEmptyMailTemplates()); //В случае изменений переимпортируем пустые шаблоны (вдруг изменилось описание)
+
+                    var temp = CurrentProperty; //Костыль для обновления значения в combobox'е
+                    CurrentProperty = null;
+                    CurrentProperty = temp;
+                    OnPropertyChanged();
+                }
+                WindowVisibility = Visibility.Visible;
             }
-            WindowVisibility = Visibility.Visible;
         }
 
         #endregion

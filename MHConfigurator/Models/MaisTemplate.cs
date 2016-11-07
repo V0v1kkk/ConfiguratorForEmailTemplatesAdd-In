@@ -56,7 +56,7 @@ namespace MHConfigurator.Models
             }
         }
 
-        public string FullDescription => TemplateDescription + " (" + TemplateId + ")";
+        public string FullDescription () => TemplateDescription + " (" + TemplateId + ")";
 
 
         public bool Useful

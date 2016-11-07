@@ -14,13 +14,9 @@ using MugenMvvmToolkit.ViewModels;
 
 namespace MHConfigurator.ViewModels
 {
-    internal interface IMailEditorViewModel
-    {
-        void MailEditorViewModelSetup(int templateId, bool enableMacrosesProcessing);
-    }
 
     //class MailEditorViewModel : ViewModelBase, INavigableViewModel, IMailEditorViewModel
-    class MailEditorViewModel : ValidatableViewModel, INavigableViewModel, IMailEditorViewModel
+    class MailEditorViewModel : ValidatableViewModel, INavigableViewModel
     {
         private MailTemplateEditable _templateEditable;
 
@@ -35,6 +31,8 @@ namespace MHConfigurator.ViewModels
         private int _newNumberForTemplate;
 
         private readonly IToastPresenter _toastPresenter;
+
+        
 
 
         #region Properties

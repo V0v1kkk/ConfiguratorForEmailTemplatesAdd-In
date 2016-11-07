@@ -22,6 +22,16 @@ namespace MHConfigurator.Views
         public MailEditorView()
         {
             InitializeComponent();
+            /* На случай переделки на страничную навигацию
+            this.Loaded += delegate
+            {
+                Window window = Window.GetWindow(this);
+                if (window != null)
+                {
+                    window.SetBinding(Window.MinHeightProperty, new Binding() { Source = this.MinHeight + 100 });
+                    window.SetBinding(Window.MinWidthProperty, new Binding() { Source = this.MinWidth + 100 });
+                }
+            };*/
         }
     }
 }
