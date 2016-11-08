@@ -58,7 +58,8 @@ namespace DataAccessLibrary
         static private string ConnectionStringBulder(string databasePath)
         {
             if(databasePath != null && databasePath.StartsWith(@"\\")) databasePath  =  @"\\" + databasePath; //fix for databases in shared folder
-            return $@"metadata = res://*/DataModel.csdl|res://*/DataModel.ssdl|res://*/DataModel.msl;provider=System.Data.SQLite.EF6;provider connection string='data source=""{databasePath}""'";
+            return $@"metadata = res://*/DataModel.csdl|res://*/DataModel.ssdl|res://*/DataModel.msl;
+                    provider=System.Data.SQLite.EF6;provider connection string='data source=""{databasePath}""'";
         }
 
         public void Dispose()

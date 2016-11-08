@@ -22,7 +22,7 @@ namespace MHConfigurator.ViewModels
 
         public MailPropertiesViewModel()
         {
-            _mailProperties = new ObservableCollection<MailProperty>(DAL.GetDAL().MailPropertys);
+            _mailProperties = new ObservableCollection<MailProperty>(DAL.GetDAL().MailProperties);
             foreach (var property in _mailProperties)
             {
                 property.PropertyChanged += MailPropertyInCollection_Changed;
@@ -123,11 +123,11 @@ namespace MHConfigurator.ViewModels
                 }
                 else if (_searchString.IsNullOrEmpty())
                 {
-                    MailProperties = new ObservableCollection<MailProperty>(DAL.GetDAL().MailPropertys.Where(property => property.ButtonID>0).ToList());
+                    MailProperties = new ObservableCollection<MailProperty>(DAL.GetDAL().MailProperties.Where(property => property.ButtonID>0).ToList());
                 }
                 else
                 {
-                    MailProperties = new ObservableCollection<MailProperty>(DAL.GetDAL().MailPropertys.Where(property => property.ButtonID > 0).ToList());
+                    MailProperties = new ObservableCollection<MailProperty>(DAL.GetDAL().MailProperties.Where(property => property.ButtonID > 0).ToList());
                     var temp = new ObservableCollection<MailProperty>(MailProperties.Where(
                         property =>
                             (property.ButtonID.ToString().SafeContains(SearchString, StringComparison.InvariantCultureIgnoreCase)) 

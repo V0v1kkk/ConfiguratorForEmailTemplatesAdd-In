@@ -17,13 +17,9 @@ namespace MHConfigurator
     // ReSharper disable once InconsistentNaming
     public class DAL
     {
-        private static readonly object Locker;
-        static private DAL _instance;
-
-
         private DAL()
         {
-            //Mapper.Initialize(cfg => cfg.CreateMap<DataAccessLibrary.MailPropertys, MailPropertys>().ForMember(destinationMember => destinationMember.Useful, x => x.MapFrom(m => GetDAL().GetUsedPropertiesNumbers().Contains(m.ButtonID))));
+            //Mapper.Initialize(cfg => cfg.CreateMap<DataAccessLibrary.MailProperties, MailProperties>().ForMember(destinationMember => destinationMember.Useful, x => x.MapFrom(m => GetDAL().GetUsedPropertyNumbers().Contains(m.ButtonID))));
             
             //Mapper.AssertConfigurationIsValid();
 
@@ -62,6 +58,28 @@ namespace MHConfigurator
             return _instance;
         }
 
+
+        #region Properties
+
+        #region Fields
+
+        private static readonly object Locker;
+        static private DAL _instance;
+
+        private List<MailProperty> _mailPropertys = new List<MailProperty>(); //Возможно нужно модель унаследовать от модели
+        private List<MailTemplate> _mailTemplates = new List<MailTemplate>();
+        private List<long> _usedProperties = new List<long>();
+        private List<long> _usedTemplates = new List<long>();
+
+        private bool _generatedChanged; //От этого поля будет зависеть несколько полей (список задействованных шаблонов, сами генератед объекты (м.б. в виде дерева))
+        private bool _mailPropertiesChanged; //Будет устанавливатся в случае записи в таблицу
+        private bool _mailTemplatesChanged;
+        private bool _mailTemplatesChangedForEmpty;
+
+        private string _databasePath;
+
+        #endregion
+
         public string DatabasePath
         {
             get { return _databasePath; }
@@ -70,80 +88,70 @@ namespace MHConfigurator
                 if (_databasePath != value)
                 {
                     //todo: сделать так для всех получаемых сущностей
-                    _GeneratedChanged = true;
-                    _mailPropertyChanged = true;
+                    _generatedChanged = true;
+                    _mailPropertiesChanged = true;
                 }
                 _databasePath = value;
                 
             }
         }
 
-
-        private bool _mailPropertyChanged; //Будет устанавливатся в случае записи в таблицу
-        private List<MailProperty> _mailPropertys = new List<MailProperty>(); //Возможно нужно модель унаследовать от модели
-        public List<MailProperty> MailPropertys
+        public List<MailProperty> MailProperties
         {
             get
             {
-                if ((_mailPropertys == null)||(_mailPropertys.Count==0)||(_mailPropertyChanged))
+                if ((_mailPropertys == null)||(_mailPropertys.Count==0)||(_mailPropertiesChanged))
                 {
-                    _mailPropertys = GetMailPropertys();
-                    if (_mailPropertyChanged) _mailPropertyChanged = false;
+                    _mailPropertys = GetMailProperties();
+                    if (_mailPropertiesChanged) _mailPropertiesChanged = false;
                 }
                 return _mailPropertys;
             }
-            private set
+        }
+
+        public List<MailTemplate> MailTemplates
+        {
+            get
             {
-                _mailPropertys = value;
-                //Тут писать в базу? сдалать публичным, Вичислять разницу межу коллекциями и приводить базу в соответствующее состояние???
+                if ((_mailTemplates == null) || (_mailTemplates.Count == 0) || (_mailTemplatesChanged))
+                {
+                    _mailTemplates = GetMailsTemplates();
+                    if (_mailTemplatesChanged) _mailTemplatesChanged = false;
+                }
+                return _mailTemplates;
             }
         }
 
-
-        private bool _GeneratedChanged = false; //От этого поля будет зависеть несколько полей (список задействованных шаблонов, сами генератед объекты (м.б. в виде дерева))
-        private List<long> _usedProperties = new List<long>();
         public List<long> UsedProperties
         {
             get
             {
-                if ((_usedProperties == null) || (_usedProperties.Count == 0) || (_GeneratedChanged))
+                if ((_usedProperties == null) || (_usedProperties.Count == 0) || (_generatedChanged))
                 {
-                    _usedProperties = GetUsedPropertiesNumbers();
+                    _usedProperties = GetUsedPropertyNumbers();
                 }
                 return _usedProperties; 
                 
             }
-            private set
-            {
-                _usedProperties = value;
-                //Писать в базу?
-            }
         }
-
-
-        private List<long> _usedTemplates = new List<long>();
-        private string _databasePath;
 
         public List<long> UsedTemplates
         {
             get
             {
-                if ((_usedTemplates == null) || (_usedTemplates.Count == 0) || (_GeneratedChanged))
+                if ((_usedTemplates == null) || (_usedTemplates.Count == 0) || (_mailPropertiesChanged))
                 {
-                    _usedTemplates = GetUsedTemplatesNumbers();
+                    _usedTemplates = GetUsedTemplateNumbers();
                 }
                 return _usedTemplates;
 
             }
-            private set
-            {
-                _usedTemplates = value;
-                //Писать в базу?
-            }
         }
 
+        #endregion
 
 
+        #region Work with MailsProperties
 
         public MailProperty GetMailPropertyById(int id)
         {
@@ -162,25 +170,8 @@ namespace MHConfigurator
                 return t;
             }
         }
-        /*
-        public MailPropertys FindMailProperty(Expression<Func<MailPropertys, bool>> predicate) ////
-        {
-            using (var uow = new UnitOfWork(DatabasePath))
-            {
-                MailPropertys t = null;
-                try
-                {
-                    t = Mapper.Map<DataAccessLibrary.MailPropertys, MailPropertys>(uow.Propertys.Find(x => x.ButtonID == id).First());
 
-                }
-                catch (Exception)
-                {
-                    //todo: Залогировать
-                }
-                return t;
-            }
-        }*/
-        private List<MailProperty> GetMailPropertys()
+        private List<MailProperty> GetMailProperties()
         {
             using (var uow = new UnitOfWork(DatabasePath))
             {
@@ -208,8 +199,6 @@ namespace MHConfigurator
             }
         }
 
-        
-
         public bool SaveMailProperty(MailProperty mailProperty)
         {
             if (mailProperty.ButtonID == 0) return false;
@@ -227,7 +216,7 @@ namespace MHConfigurator
                         Mapper.Map(mailProperty, dbProp);
                     }
                     uow.Complete();
-                    _mailPropertyChanged = true;
+                    _mailPropertiesChanged = true;
                     return true;
                 }
                 catch (Exception)
@@ -255,7 +244,7 @@ namespace MHConfigurator
                         uow.Propertys.Remove(dbProp);
                     }
                     uow.Complete();
-                    _mailPropertyChanged = true;
+                    _mailPropertiesChanged = true;
                     return true;
                 }
                 catch (Exception)
@@ -266,9 +255,7 @@ namespace MHConfigurator
             }
         }
 
-        #region MailTemplates
-
-        public List<long> GetUsedPropertiesNumbers()
+        public List<long> GetUsedPropertyNumbers()
         {
             List<long> answer = new List<long>();
             using (var uow = new UnitOfWork(DatabasePath))
@@ -283,28 +270,52 @@ namespace MHConfigurator
                     //todo: Залогировать
                     return null;
                 }
-                
+
             }
         }
 
-        public List<long> GetUsedTemplatesNumbers()
+        #endregion
+
+        #region MailTemplates
+
+        public MailTemplate GetMailTemplateById(int id)
         {
-            List<long> answer = new List<long>();
             using (var uow = new UnitOfWork(DatabasePath))
             {
+                MailTemplate t = null;
                 try
                 {
-                    answer = uow.Propertys.GetUsedTemplates();
-                    return answer;
+                    t = Mapper.Map<DataAccessLibrary.MailsTemplate, MailTemplate>(uow.Templates.Find(x => x.Templateid == id).First());
+
+                }
+                catch (Exception)
+                {
+                    //todo: Залогировать
+                }
+                return t;
+            }
+        }
+
+        private List<MailTemplate> GetMailsTemplates()
+        {
+            //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
+            using (var uow = new UnitOfWork(DatabasePath))
+            {
+                List<MailTemplate> list = new List<MailTemplate>();
+                try
+                {
+                    var templates = uow.Templates.GetAll();
+                    list.AddRange(templates.Select(Mapper.Map<DataAccessLibrary.MailsTemplate, MailTemplate>).Where(x => x.TemplateId != 0));
+                    return list;
                 }
                 catch (Exception)
                 {
                     //todo: Залогировать
                     return null;
                 }
-
             }
         }
+
         public List<MailTemplate> GetEmptyMailTemplates()
         {
             //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
@@ -333,45 +344,6 @@ namespace MHConfigurator
             }
         }
 
-
-        public List<MailTemplate> GetMailTemplates()
-        {
-            //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
-            using (var uow = new UnitOfWork(DatabasePath))
-            {
-                List<MailTemplate> list = new List<MailTemplate>();
-                try
-                {
-                    var templates = uow.Templates.GetAll();
-                    list.AddRange(templates.Select(Mapper.Map<DataAccessLibrary.MailsTemplate, MailTemplate>).Where(x=>x.TemplateId!=0));
-                    return list;
-                }
-                catch (Exception)
-                {
-                    //todo: Залогировать
-                    return null;
-                }
-            }
-        }
-
-        public MailTemplate GetMailTemplateById(int id)
-        {
-            using (var uow = new UnitOfWork(DatabasePath))
-            {
-                MailTemplate t = null;
-                try
-                {
-                    t = Mapper.Map<DataAccessLibrary.MailsTemplate, MailTemplate>(uow.Templates.Find(x => x.Templateid == id).First());
-
-                }
-                catch (Exception)
-                {
-                    //todo: Залогировать
-                }
-                return t;
-            }
-        }
-
         public bool SaveMailTemplate(MailTemplate mailsTemplate, bool newItem = false)
         {
             if (mailsTemplate.TemplateId == 0) return false;
@@ -390,7 +362,7 @@ namespace MHConfigurator
                         Mapper.Map(mailsTemplate, dbProp);
                     }
                     uow.Complete();
-                    //_mailPropertyChanged = true;
+                    _mailTemplatesChanged = true;
                     return true;
                 }
                 catch (Exception exception)
@@ -418,7 +390,7 @@ namespace MHConfigurator
                         uow.Templates.Remove(dbTemplate);
                     }
                     uow.Complete();
-                    _mailPropertyChanged = true;
+                    _mailTemplatesChanged = true;
                     return true;
                 }
                 catch (Exception exception)
@@ -428,8 +400,28 @@ namespace MHConfigurator
                 }
             }
         }
+
+        public List<long> GetUsedTemplateNumbers()
+        {
+            using (var uow = new UnitOfWork(DatabasePath))
+            {
+                try
+                {
+                    var answer = uow.Propertys.GetUsedTemplates();
+                    return answer;
+                }
+                catch (Exception)
+                {
+                    //todo: Залогировать
+                    return null;
+                }
+
+            }
+        }
+
         #endregion
 
+        #region Work with connection to DB
 
         public bool TestConnection()
         {
@@ -450,6 +442,7 @@ namespace MHConfigurator
             return false;
         }
 
+        #endregion
 
         #region FileSystemIO
 

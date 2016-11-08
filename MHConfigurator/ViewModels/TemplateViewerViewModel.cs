@@ -113,7 +113,7 @@ namespace MHConfigurator.ViewModels
 
         public TemplateViewerViewModel(IToastPresenter toastPresenter)
         {
-            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().GetMailTemplates());
+            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().MailTemplates);
 
             AddCommand = new RelayCommand(AddExecute, ()=>true, this);
             EditCommand = new RelayCommand(EditExecute, ()=>CurrentTemplate!=null, this);
@@ -220,7 +220,7 @@ namespace MHConfigurator.ViewModels
                 tempcurrenttemplate = CurrentTemplate.TemplateId;
                 CurrentTemplate = null;
             }
-            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().GetMailTemplates());
+            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().MailTemplates);
             if (tempcurrenttemplate != 0) CurrentTemplate = MailsTemplates.FirstOrDefault(template => template.TemplateId == tempcurrenttemplate);
             OnPropertyChanged("MailsTemplates");
             OnPropertyChanged("CurrentTemplate");
