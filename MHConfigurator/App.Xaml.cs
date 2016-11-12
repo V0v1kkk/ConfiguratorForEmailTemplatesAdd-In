@@ -15,22 +15,16 @@ namespace MHConfigurator
         public App()
         {
             // ReSharper disable once ObjectCreationAsStatement
-            try
+            var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            if (path != null)
             {
-
-                var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
                 path = Path.Combine(path, IntPtr.Size == 8 ? "x64" : "x86");
                 bool ok = SetDllDirectory(path);
                 if (!ok) throw new System.ComponentModel.Win32Exception();
-
-
-                new Bootstrapper<Starter>(this, new AutofacContainer());
             }
-            catch (Exception e)
-            {
-                File.WriteAllText(@"D:\1.txt", e.Message);
-                File.WriteAllText(@"D:\1.txt", e.StackTrace);
-            }
+            else throw new System.ComponentModel.Win32Exception();
+
+            new Bootstrapper<Starter>(this, new AutofacContainer());
         }
 
 

@@ -26,7 +26,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationRevision>7</ApplicationRevision>
     <ApplicationVersion>0.7.100.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -41,7 +41,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -197,10 +197,14 @@
     <Compile Include="Models\WorkTime.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Starter.cs" />
+    <Compile Include="ViewModels\InterfaceEditorViewModel.cs" />
     <Compile Include="ViewModels\MailEditorViewModel.cs" />
     <Compile Include="ViewModels\MailPropertiesViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\TemplateViewerViewModel.cs" />
+    <Compile Include="Views\InterfaceEditorView.xaml.cs">
+      <DependentUpon>InterfaceEditorView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MailEditorView.xaml.cs">
       <DependentUpon>MailEditorView.xaml</DependentUpon>
     </Compile>
@@ -218,6 +222,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Views\InterfaceEditorView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MailEditorView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -249,12 +257,12 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <AdditionalFiles Include="x86\SQLite.Interop.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </AdditionalFiles>
-    <AdditionalFiles Include="x64\SQLite.Interop.dll">
+    <Content Include="x86\SQLite.Interop.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AdditionalFiles>
+    </Content>
+    <Content Include="x64\SQLite.Interop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Resource Include="_MugenMvvmToolkitReadme.txt" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -319,6 +327,21 @@
     <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
+    <!--
+    <ItemGroup>
+      <Content Include="$(SolutionDir)x86\**\*">
+        <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <Visible>false</Visible>
+      </Content>
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="$(SolutionDir)x64\**\*">
+        <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <Visible>false</Visible>
+      </Content>
+    </ItemGroup>
+    
+    -->
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.5 %28x86 и x64%29</ProductName>

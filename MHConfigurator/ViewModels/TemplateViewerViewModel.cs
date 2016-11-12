@@ -212,7 +212,7 @@ namespace MHConfigurator.ViewModels
 
         private void RefrashTemplates()
         {
-            WindowVisibility = Visibility.Visible; //При скрытом окне переотрисовка не произойдёт
+            WindowVisibility = Visibility.Visible; //При скрытом окне переотрисовка не происходит
 
             long tempcurrenttemplate = 0;
             if (CurrentTemplate != null)
@@ -228,7 +228,7 @@ namespace MHConfigurator.ViewModels
 
         private void RefrashCurrentTemplate()
         {
-            WindowVisibility = Visibility.Visible; //При скрытом окне переотрисовка не произойдёт
+            WindowVisibility = Visibility.Visible; //При скрытом окне переотрисовка не происходит
 
             if (CurrentTemplate==null) return;
             long tempcurrenttemplate = CurrentTemplate.TemplateId;
