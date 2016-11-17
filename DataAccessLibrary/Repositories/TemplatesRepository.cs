@@ -16,7 +16,6 @@ namespace DataAccessLibrary.Repositories
 
         public IEnumerable<Tuple<int,string>> GetListOfEmptyTemplates()
         {
-
             return MHContext.MailsTemplates.ToList().Select(x => Tuple.Create((int)x.Templateid, x.Templadescription));
         }
 

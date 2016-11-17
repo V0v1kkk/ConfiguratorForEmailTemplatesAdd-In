@@ -1,5 +1,7 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Configuration;
 using System.Windows;
@@ -30,6 +32,7 @@ namespace MHConfigurator.ViewModels
                 _connectionSuccess = value;
                 OnPropertyChanged();
                 OnPropertyChanged("ConnectionIndicatorColor");
+                CommandManager.InvalidateRequerySuggested(); //Refrash canexecute on buttons
             }
         }
 
@@ -51,6 +54,32 @@ namespace MHConfigurator.ViewModels
             }
         }
 
+        public bool ViewBusy
+        {
+            get { return _viewBusy; }
+            set
+            {
+                if (value == _viewBusy) return;
+                _viewBusy = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ViewBusyMessage
+        {
+            get
+            {
+                return _viewBusyMessage;
+            }
+
+            set
+            {
+                if (value == _viewBusyMessage) return;
+                _viewBusyMessage = value;
+                OnPropertyChanged();
+            }
+        }
+
         private readonly IToastPresenter _toastPresenter;
         public ICommand OpenPorpertiesEditorCommand;
         public ICommand OpenTemplatesViewerCommand;
@@ -59,9 +88,49 @@ namespace MHConfigurator.ViewModels
         public ICommand CreateDbCommand;
         private bool _connectionSuccess;
         private bool _windowVisible=true;
+        private bool _viewBusy;
+        private string _viewBusyMessage;
 
+
+        //todo: На будующее сделать поддержку режима ReadOnly (проверять права на файл и т.д.)
         public MainViewModel(IToastPresenter toastPresenter)
         {
+            TestConnection();
+
+            /*
+            //BGW construction for correctly work Busy control
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += (o, ea) =>
+            {
+                ea.Result = DAL.GetDAL().TestConnection();
+            };
+            worker.RunWorkerCompleted += (o, ea) =>
+            {
+                ViewBusy = false;
+                ConnectionSuccess = (bool)ea.Result;
+                if (ConnectionSuccess)
+                {
+                    _toastPresenter?.ShowAsync("Соединение с БД установлено", ToastDuration.Short, ToastPosition.Center);
+                    CommandManager.InvalidateRequerySuggested(); //Refrash canexecute on buttons
+                    DAL.GetDAL().MakeBackUpDb(Properties.Settings.Default.databasePath); // Make backup current DB
+                }
+                else
+                {
+                    Dispatcher.CurrentDispatcher.BeginInvoke(new Func<MessageBoxResult>(
+                    () => MessageBox.Show("Не удалось подключится к БД. Укажите путь к БД или создайтей новую.",
+                    "Ожибка подключения БД", MessageBoxButton.OK, MessageBoxImage.Error)));
+                }
+            };
+
+            DAL.GetDAL().DatabasePath = Properties.Settings.Default.databasePath;
+            ViewBusyMessage = "Проверка связи с БД";
+            ViewBusy = true;
+            worker.RunWorkerAsync();
+            */
+
+            /*
+
+
             DAL.GetDAL().DatabasePath = Properties.Settings.Default.databasePath;
             if (!DAL.GetDAL().TestConnection())
             {
@@ -75,48 +144,144 @@ namespace MHConfigurator.ViewModels
                 ConnectionSuccess = true;
                 DAL.GetDAL().MakeBackUpDb(Properties.Settings.Default.databasePath);
             }
-
+            */
 
             _toastPresenter = toastPresenter;
 
-            OpenPorpertiesEditorCommand = new RelayCommand(OpenPorpertiesEditorExecute, () => ConnectionSuccess);
-            OpenTemplatesViewerCommand = new RelayCommand(OpenTemplatesViewerExecute, () => ConnectionSuccess);
+            OpenPorpertiesEditorCommand = new RelayCommand(OpenPorpertiesEditorExecute, ButtonsForWorkWithDbCanBeActive, this);
+            OpenTemplatesViewerCommand = new RelayCommand(OpenTemplatesViewerExecute, ButtonsForWorkWithDbCanBeActive, this);
             CheckConnectionCommand = new RelayCommand(CheckConnectionExecute);
             OpenDbCommand = new RelayCommand(OpenDbExecute);
             CreateDbCommand = new RelayCommand(CreateDbExecute);
         }
 
-        private async void OpenPorpertiesEditorExecute()
+        private async void TestConnection()
         {
-            WindowVisibility=Visibility.Collapsed;
-            using (var properiesEditor = GetViewModel<MailPropertiesViewModel>())
+            await Task.Factory.StartNew(() =>
             {
-                await properiesEditor.ShowAsync();
-            }
-            WindowVisibility = Visibility.Visible;
+                DAL.GetDAL().DatabasePath = Properties.Settings.Default.databasePath;
+                ViewBusyMessage = "Проверка связи с БД";
+                ViewBusy = true;
+                ConnectionSuccess = DAL.GetDAL().TestConnection();
+                ViewBusy = false;
+                if (ConnectionSuccess)
+                {
+                    _toastPresenter?.ShowAsync("Соединение с БД установлено", ToastDuration.Short, ToastPosition.Center);
+                    CommandManager.InvalidateRequerySuggested(); //Refrash canexecute on buttons
+                    DAL.GetDAL().MakeBackUpDb(Properties.Settings.Default.databasePath); // Make backup current DB
+                }
+                else
+                {
+                    Dispatcher.CurrentDispatcher.BeginInvoke(new Func<MessageBoxResult>(
+                    () => MessageBox.Show("Не удалось подключится к БД. Укажите путь к БД или создайтей новую.",
+                    "Ожибка подключения БД", MessageBoxButton.OK, MessageBoxImage.Error)));
+                }
+            });
         }
 
-        private async void OpenTemplatesViewerExecute()
+        //test
+        private bool ButtonsForWorkWithDbCanBeActive(object cmdParameter)
         {
-            WindowVisibility = Visibility.Collapsed;
-            using (var properiesEditor = GetViewModel<TemplateViewerViewModel>())
-            {
-                await properiesEditor.ShowAsync();
-            }
-            WindowVisibility = Visibility.Visible;
+            return ConnectionSuccess;
         }
+
+
+        private async void OpenPorpertiesEditorExecute(object cmdParameter)
+        {
+            await Task.Factory.StartNew(async () =>
+            {
+                ViewBusyMessage = "Загрузка шаблонов";
+                ViewBusy = true;
+                var properiesEditor = GetViewModel<MailPropertiesViewModel>();
+                ViewBusy = false;
+                WindowVisibility = Visibility.Collapsed;
+                await properiesEditor.ShowAsync();
+                WindowVisibility = Visibility.Visible;
+                ViewBusy = false;
+                properiesEditor.Dispose();
+            });
+        }
+
+
+        private async void OpenTemplatesViewerExecute(object cmdParameter)
+        {
+            await Task.Factory.StartNew(async () =>
+            {
+                ViewBusyMessage = "Загрузка HTML-шаблонов";
+                ViewBusy = true;
+                var templatesEditor = GetViewModel<TemplateViewerViewModel>();
+                templatesEditor.Setup();
+                ViewBusy = false;
+                WindowVisibility = Visibility.Collapsed;
+                await templatesEditor.ShowAsync();
+                WindowVisibility = Visibility.Visible;
+                templatesEditor.Dispose();
+            });
+        }
+
+        /* old and long version
+        private void OpenTemplatesViewerExecute1(object cmdParameter)
+        {
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += (o, ea) =>
+            {
+                var templatesEditor = GetViewModel<TemplateViewerViewModel>();
+                ea.Result = templatesEditor;
+            };
+            worker.RunWorkerCompleted += async (o, ea) =>
+            {
+                ViewBusy = false;
+                if (!(ea.Result is TemplateViewerViewModel)) return;
+
+                var templatesEditor = (TemplateViewerViewModel)ea.Result;
+                WindowVisibility = Visibility.Collapsed;
+                await templatesEditor.ShowAsync();
+                WindowVisibility = Visibility.Visible;
+                ViewBusy = false;
+                templatesEditor.Dispose();
+            };
+
+
+            ViewBusyMessage = "Загрузка HTML-шаблонов";
+            ViewBusy = true;
+            worker.RunWorkerAsync();
+        }*/
 
         private void CheckConnectionExecute()
         {
+            //BGW construction for correctly work Busy control
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += (o, ea) =>
+            {
+                ea.Result = DAL.GetDAL().TestConnection(Properties.Settings.Default.databasePath);
+            };
+            worker.RunWorkerCompleted += (o, ea) =>
+            {
+                ViewBusy = false;
+                ConnectionSuccess = (bool)ea.Result;
+                if (ConnectionSuccess)
+                {
+                    _toastPresenter?.ShowAsync("Соединение с БД успешно", ToastDuration.Short, ToastPosition.Center);
+                    CommandManager.InvalidateRequerySuggested(); //Refrash canexecute on buttons
+                }
+            };
+
+            ViewBusyMessage = "Проверка связи с БД";
+            ViewBusy = true;
+            worker.RunWorkerAsync();
+
+
+
+            /*
             ConnectionSuccess = DAL.GetDAL().TestConnection(Properties.Settings.Default.databasePath);
             if (ConnectionSuccess)
             {
                 _toastPresenter?.ShowAsync("Соединение с БД успешно", ToastDuration.Short, ToastPosition.Center);
                 CommandManager.InvalidateRequerySuggested(); //Refrash canexecute on buttons
-            }
+            }*/
         }
 
-        private void OpenDbExecute()
+        private async void OpenDbExecute()
         {
             try
             {
@@ -133,6 +298,63 @@ namespace MHConfigurator.ViewModels
 
                 if (myDialog.ShowDialog() == true)
                 {
+                    await Task.Factory.StartNew(() =>
+                    {
+                        ViewBusyMessage = "Подключение к БД";
+                        ViewBusy = true;
+                        var tryConnectionResult = DAL.GetDAL().TestConnection(myDialog.FileName);
+                        ViewBusy = false;
+                        if (tryConnectionResult)
+                        {
+                            Properties.Settings.Default.databasePath = myDialog.FileName;
+                            Properties.Settings.Default.Save();
+                            OnPropertyChanged("CurrentDatabasePath");
+
+                            DAL.GetDAL().DatabasePath = myDialog.FileName;
+                            ConnectionSuccess = true;
+                            DAL.GetDAL().MakeBackUpDb(myDialog.FileName);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не удалось подключится к указанной БД. Попробуйте выбрать другую БД",
+                                            "Ожибка подключения БД", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    });
+
+                    /*
+                    //BGW construction for correctly work Busy control
+                    BackgroundWorker worker = new BackgroundWorker();
+                    worker.DoWork += (o, ea) =>
+                    {
+                        ea.Result = DAL.GetDAL().TestConnection(myDialog.FileName);
+                    };
+                    worker.RunWorkerCompleted += (o, ea) =>
+                    {
+                        ViewBusy = false;
+                        var tryConnectionResult = (bool)ea.Result;
+                        if (tryConnectionResult)
+                        {
+                            Properties.Settings.Default.databasePath = myDialog.FileName;
+                            Properties.Settings.Default.Save();
+                            OnPropertyChanged("CurrentDatabasePath");
+
+                            DAL.GetDAL().DatabasePath = myDialog.FileName;
+                            ConnectionSuccess = true;
+                            DAL.GetDAL().MakeBackUpDb(myDialog.FileName);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не удалось подключится к указанной БД. Попробуйте выбрать другую БД",
+                                            "Ожибка подключения БД", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    };
+
+                    ViewBusyMessage = "Подключение к БД";
+                    ViewBusy = true;
+                    worker.RunWorkerAsync();
+
+
+                    /*
                     if (DAL.GetDAL().TestConnection(myDialog.FileName))
                     {
                         Properties.Settings.Default.databasePath = myDialog.FileName;
@@ -142,16 +364,17 @@ namespace MHConfigurator.ViewModels
                         DAL.GetDAL().DatabasePath = myDialog.FileName;
                         ConnectionSuccess = true;
                         DAL.GetDAL().MakeBackUpDb(myDialog.FileName);
-                        CommandManager.InvalidateRequerySuggested(); //Refrash canexecute on buttons
                     }
                     else
                     {
                         MessageBox.Show("Не удалось подключится к указанной БД. Попробуйте выбрать другую БД",
                         "Ожибка подключения БД", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
+                    */
+
                 }
             }
-            catch (System.IO.FileNotFoundException exceptionex)
+            catch (FileNotFoundException exception)
             {
 
                 //todo: Залогировать

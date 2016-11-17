@@ -3,10 +3,8 @@ using System.IO;
 using System.Windows;
 using MugenMvvmToolkit;
 using MugenMvvmToolkit.WPF.Infrastructure;
-
 using System.Runtime.InteropServices;
 using System.Reflection;
-using System.IO;
 
 namespace MHConfigurator
 {

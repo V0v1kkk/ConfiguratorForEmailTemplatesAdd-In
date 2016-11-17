@@ -21,11 +21,5 @@ namespace DataAccessLibrary
         public MassHelperEntities(SQLiteConnection connection) : base(connection, true)
         {
         }
-
-        private static string CheckConnectionString(string connectionString)
-        {
-            if (string.IsNullOrWhiteSpace(connectionString)) return "name=MassHelperEntities";
-            return connectionString;
-        }
     }
 }

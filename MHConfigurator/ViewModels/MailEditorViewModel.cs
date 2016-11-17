@@ -172,8 +172,7 @@ namespace MHConfigurator.ViewModels
                 return TemplateEditable.TemplateBodyRusFix;   
             }
         }
-
-
+       
         /// <summary>
         /// Пробрасывает во viewmodel описание HTML-шаблона для возможности валидации
         /// </summary>
@@ -219,7 +218,7 @@ namespace MHConfigurator.ViewModels
             TemplateEditable = new MailTemplateEditable();
             TemplateEditable.PropertyChanged += TemplateEditableOnChanged;
 
-            MailsTemplatesEmpty = DAL.GetDAL().GetEmptyMailTemplates();
+            MailsTemplatesEmpty = DAL.GetDAL().EmptyMailTemplates;
 
             _toastPresenter = toastPresenter;
 
@@ -331,7 +330,7 @@ namespace MHConfigurator.ViewModels
 
                     var temp = TemplateEditable; //Перезагружаем список имеющихся номеров шаблонов
                     TemplateEditable = null;
-                    MailsTemplatesEmpty = DAL.GetDAL().GetEmptyMailTemplates();
+                    MailsTemplatesEmpty = DAL.GetDAL().EmptyMailTemplates;
                     TemplateEditable = temp;
                 }
                 else //Исключительная ситуация
@@ -355,11 +354,8 @@ namespace MHConfigurator.ViewModels
                 OnPropertyChanged();
                 return true;
             }
-            else
-            {
-                _toastPresenter?.ShowAsync("Не удалось сохранить шаблон", ToastDuration.Short, ToastPosition.Center);
-                return false;
-            }
+            _toastPresenter?.ShowAsync("Не удалось сохранить шаблон", ToastDuration.Short, ToastPosition.Center);
+            return false;
         }
         
 

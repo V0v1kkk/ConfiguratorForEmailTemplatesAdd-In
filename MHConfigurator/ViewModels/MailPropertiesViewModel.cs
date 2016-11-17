@@ -29,7 +29,7 @@ namespace MHConfigurator.ViewModels
             }
             _mailProperties.CollectionChanged += _mailProperties_CollectionChanged;
 
-            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().GetEmptyMailTemplates());
+            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().EmptyMailTemplates);
 
             CancelCommand = new RelayCommand(CancelCommandExecute,CancelCanExecute,this);
             SaveCommand = new RelayCommand(SaveCommandExecute, SaveCanExecute, this);
@@ -327,7 +327,7 @@ namespace MHConfigurator.ViewModels
                 await asyncOperation;
                 if(htmlEditor.TemplateChanged)
                 {
-                    MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().GetEmptyMailTemplates()); //В случае изменений переимпортируем пустые шаблоны (вдруг изменилось описание)
+                    MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().EmptyMailTemplates); //В случае изменений переимпортируем пустые шаблоны (вдруг изменилось описание)
 
                     var temp = CurrentProperty; //Костыль для обновления значения в combobox'е
                     CurrentProperty = null;
@@ -372,6 +372,8 @@ namespace MHConfigurator.ViewModels
         {
             return !NewModeOn;
         }
+
+        //todo: Предусмотреть изменени данных при поиске
         private bool SaveCanExecute(object cmdParameter)
         {
             return NewModeOn || ((_originalCurrentProperty != null) && (CurrentProperty != null) && (CurrentProperty != _originalCurrentProperty));

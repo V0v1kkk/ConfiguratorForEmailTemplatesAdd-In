@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using MHConfigurator.Models;
 using MugenMvvmToolkit;
 using MugenMvvmToolkit.Interfaces.Callbacks;
@@ -18,8 +21,10 @@ namespace MHConfigurator.ViewModels
         private MailTemplate _currentTemplate;
         private bool _processingMacrosesOn;
         private string _currentHtml;
-        private bool _windowVisible = true;
+        private Visibility _windowVisible = Visibility.Visible;
         private readonly IToastPresenter _toastPresenter;
+        private string _busyMessage;
+        private bool _viewBusy;
 
 
         #region Propertyes
@@ -28,14 +33,12 @@ namespace MHConfigurator.ViewModels
         /// </summary>
         public Visibility WindowVisibility
         {
-            get { return _windowVisible ? Visibility.Visible : Visibility.Collapsed; }
+            get { return _windowVisible== Visibility.Visible ? Visibility.Visible : Visibility.Collapsed; }
             private set
             {
-                if (value == Visibility.Visible && _windowVisible) return;
-                if (value != Visibility.Visible && !_windowVisible) return;
+                if (value == _windowVisible ) return;
+                _windowVisible = value;
 
-                if (value == Visibility.Visible) _windowVisible = true;
-                else if (value == Visibility.Collapsed) _windowVisible = false;
                 OnPropertyChanged();
             }
         }
@@ -103,6 +106,17 @@ namespace MHConfigurator.ViewModels
             }
         }
 
+        public bool ViewBusy
+        {
+            get { return _viewBusy; }
+            set
+            {
+                if (value == _viewBusy) return;
+                _viewBusy = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         public ICommand AddCommand;
@@ -113,13 +127,18 @@ namespace MHConfigurator.ViewModels
 
         public TemplateViewerViewModel(IToastPresenter toastPresenter)
         {
-            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().MailTemplates);
+            //MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().MailTemplates); //test
 
-            AddCommand = new RelayCommand(AddExecute, ()=>true, this);
-            EditCommand = new RelayCommand(EditExecute, ()=>CurrentTemplate!=null, this);
-            DeleteCommand = new RelayCommand(DeleteExecute, () => CurrentTemplate != null, this);
+            AddCommand = new RelayCommand(AddExecute, ()=>!ViewBusy, this);
+            EditCommand = new RelayCommand(EditExecute, ()=> (CurrentTemplate != null) && !ViewBusy, this );
+            DeleteCommand = new RelayCommand(DeleteExecute, () => (CurrentTemplate != null) && !ViewBusy, this);
 
             _toastPresenter = toastPresenter;
+        }
+
+        public void Setup() ////test
+        {
+            MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().MailTemplates);
         }
 
 
@@ -127,88 +146,94 @@ namespace MHConfigurator.ViewModels
 
         private async void AddExecute()
         {
-            try
+            await Task.Factory.StartNew(async () =>
             {
-                using (var htmlEditor = GetViewModel<MailEditorViewModel>())
+                try
                 {
-                    htmlEditor.ProcessMacroses = ProcessingMacrosesOn; //Настройка дочерней viewmodel'и
-
-                    WindowVisibility = Visibility.Collapsed;
-                    //IAsyncOperation<bool> asyncOperation = htmlEditor.ShowAsync();
-                    await htmlEditor.ShowAsync();
-
-                    if (htmlEditor.TemplateChanged) //В случае изменений переимпортируем шаблоны (вдруг изменилось описание)
+                    using (var htmlEditor = GetViewModel<MailEditorViewModel>())
                     {
-                        RefrashTemplates();
+                        htmlEditor.ProcessMacroses = ProcessingMacrosesOn; //Настройка дочерней viewmodel'и
+
+                        WindowVisibility = Visibility.Collapsed;
+                        await htmlEditor.ShowAsync();
+
+                        if (htmlEditor.TemplateChanged) //В случае изменений переимпортируем шаблоны (вдруг изменилось описание)
+                        {
+                            RefrashTemplates();
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                //todo: Залогировать
-            }
-            finally
-            {
-                WindowVisibility = Visibility.Visible;
-            }
+                catch (Exception ex)
+                {
+                    //todo: Залогировать
+                }
+                finally
+                {
+                    WindowVisibility = Visibility.Visible;
+                }
+            });
         }
+
 
         private async void EditExecute()
         {
-            //var htmlEditor = GetViewModel<IMailEditorViewModel>(); // todo: Найти способ управлять DI-контейнером, обернутым в MugenFamework
-            try
+            await Task.Factory.StartNew(async () =>
             {
-                using (var htmlEditor = GetViewModel<MailEditorViewModel>())
+                ViewBusy = true;
+                try
                 {
-                    htmlEditor.MailEditorViewModelSetup(CurrentTemplate.TemplateId, ProcessingMacrosesOn); //Настройка дочерней viewmodel'и
-
-                    WindowVisibility = Visibility.Collapsed;
-                    IAsyncOperation<bool> asyncOperation = htmlEditor.ShowAsync();
-                    await asyncOperation;
-
-                    if (htmlEditor.TemplateChanged) //В случае изменений переимпортируем шаблоны (вдруг изменилось описание)
+                    using (var htmlEditor = GetViewModel<MailEditorViewModel>())
                     {
-                        RefrashTemplates();
+                        htmlEditor.MailEditorViewModelSetup(CurrentTemplate.TemplateId, ProcessingMacrosesOn); //Настройка дочерней viewmodel'и
+
+                        WindowVisibility = Visibility.Collapsed;
+                        ViewBusy = false;
+                        IAsyncOperation<bool> asyncOperation = htmlEditor.ShowAsync();
+                        await asyncOperation;
+                        WindowVisibility = Visibility.Visible;
+                        if (htmlEditor.TemplateChanged == true) //В случае изменений переимпортируем шаблоны (вдруг изменилось описание)
+                        {
+                            RefrashTemplates();
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                //todo: Залогировать
-            }
-            finally
-            {
-                if(WindowVisibility != Visibility.Visible) WindowVisibility = Visibility.Visible;
-            }
+                catch (Exception ex)
+                {
+                    //todo: Залогировать
+                }
+                finally
+                {
+                    WindowVisibility = Visibility.Visible;
+                }
+            });
         }
 
-        
-
-        private void DeleteExecute()
+        private async void DeleteExecute()
         {
-            try
+            await Task.Factory.StartNew(() =>
             {
-                if (CurrentTemplate != null)
+                try
                 {
-                    if (DAL.GetDAL().DeleteMailTemplate(CurrentTemplate)) //Если удаление из базы успешно
+                    if (CurrentTemplate != null)
                     {
-                        _toastPresenter?.ShowAsync($"HTML-шаблон {CurrentTemplate.FullDescription} удален", ToastDuration.Short, ToastPosition.Center);
-                        MailsTemplates.Remove(CurrentTemplate);
-                        CurrentTemplate = null;
-                    }
-                    else
-                    {
-                        _toastPresenter?.ShowAsync("Не удалось удалить HTML-шаблон", ToastDuration.Short, ToastPosition.Center);
+                        if (DAL.GetDAL().DeleteMailTemplate(CurrentTemplate)) //Если удаление из базы успешно
+                        {
+                            _toastPresenter?.ShowAsync($"HTML-шаблон {CurrentTemplate.FullDescription} удален", ToastDuration.Short, ToastPosition.Center);
+                            MailsTemplates.Remove(CurrentTemplate);
+                            CurrentTemplate = null;
+                        }
+                        else
+                        {
+                            _toastPresenter?.ShowAsync("Не удалось удалить HTML-шаблон", ToastDuration.Short, ToastPosition.Center);
+                        }
                     }
                 }
-            }
-            catch (Exception exception)
-            {
-
-                //todo: Залогировать
-            }
+                catch (Exception exception)
+                {
+                    //todo: Залогировать
+                }
+            });
         }
-
 
         private void RefrashTemplates()
         {
@@ -220,7 +245,11 @@ namespace MHConfigurator.ViewModels
                 tempcurrenttemplate = CurrentTemplate.TemplateId;
                 CurrentTemplate = null;
             }
+
+            //todo: Обернуть в багдрауд воркер и выводит сообщение о занятости
             MailsTemplates = new ObservableCollection<MailTemplate>(DAL.GetDAL().MailTemplates);
+
+
             if (tempcurrenttemplate != 0) CurrentTemplate = MailsTemplates.FirstOrDefault(template => template.TemplateId == tempcurrenttemplate);
             OnPropertyChanged("MailsTemplates");
             OnPropertyChanged("CurrentTemplate");

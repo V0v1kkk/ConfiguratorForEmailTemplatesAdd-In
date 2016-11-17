@@ -10,6 +10,8 @@ using AutoMapper;
 using MHConfigurator.Models;
 using MailProperty = MHConfigurator.Models.MailProperty;
 using MailTemplate = MHConfigurator.Models.MailTemplate;
+// ReSharper disable InconsistentNaming
+// ReSharper disable RedundantNameQualifier
 
 namespace MHConfigurator
 {
@@ -70,11 +72,11 @@ namespace MHConfigurator
         private List<MailTemplate> _mailTemplates;
         private List<long> _usedProperties;
         private List<long> _usedTemplates;
+        private List<MailTemplate> _emptyMailTemplates;
 
         private bool _generatedChanged; //От этого поля будет зависеть несколько полей (список задействованных шаблонов, сами генератед объекты (м.б. в виде дерева))
         private bool _mailPropertiesChanged; //Будет устанавливатся в случае записи в таблицу
         private bool _mailTemplatesChanged;
-        private bool _mailTemplatesChangedForEmpty;
 
         private string _databasePath;
 
@@ -103,14 +105,14 @@ namespace MHConfigurator
             {
                 if (_mailPropertys == null)
                 {
-                    _mailPropertys = new List<MailProperty>();
                     _mailPropertys = GetMailProperties();
+                    _mailPropertiesChanged = false;
                 }
                 else if (_mailPropertiesChanged)
                 {
                     _mailPropertys = GetMailProperties();
+                    _mailPropertiesChanged = false;
                 }
-                _mailPropertiesChanged = false;
                 return _mailPropertys;
             }
             private set { _mailPropertys = value; }
@@ -122,14 +124,15 @@ namespace MHConfigurator
             {
                 if (_mailTemplates == null)
                 {
-                    _mailTemplates = new List<MailTemplate>();
                     _mailTemplates = GetMailsTemplates();
+                    _mailTemplatesChanged = false;
                 }
                 else if (_mailTemplatesChanged)
                 {
                     _mailTemplates = GetMailsTemplates();
+                    _emptyMailTemplates = GetEmptyMailTemplates();
+                    _mailTemplatesChanged = false;
                 }
-                _mailTemplatesChanged = false;
                 return _mailTemplates;
             }
         }
@@ -140,13 +143,12 @@ namespace MHConfigurator
             {
                 if (_usedProperties == null)
                 {
-                    _usedProperties = new List<long>();
                     _usedProperties = GetUsedPropertyNumbers();
+                    _generatedChanged = false;
                 }
                 else if (_generatedChanged)
                 {
                     _usedProperties = GetUsedPropertyNumbers();
-
                     //MailProperties = GetMailProperties(); //todo: Update Generated
                     _generatedChanged = false;
                 }
@@ -160,13 +162,12 @@ namespace MHConfigurator
             {
                 if (_usedTemplates == null)
                 {
-                    _usedTemplates = new List<long>();
                     _usedTemplates = GetUsedTemplateNumbers();
+                    _mailPropertiesChanged = false;
                 }
                 else if (_mailPropertiesChanged)
                 {
                     _usedTemplates = GetUsedTemplateNumbers();
-
                     MailProperties = GetMailProperties();
                     _mailPropertiesChanged = false;
                 }
@@ -174,6 +175,24 @@ namespace MHConfigurator
             }
         }
 
+        public List<MailTemplate> EmptyMailTemplates
+        {
+            get
+            {
+                if (_emptyMailTemplates == null)
+                {
+                    _emptyMailTemplates = GetEmptyMailTemplates();
+                    _mailTemplatesChanged = false;
+                }
+                else if (_mailTemplatesChanged)
+                {
+                    _emptyMailTemplates = GetEmptyMailTemplates();
+                    _mailTemplates = GetMailsTemplates();
+                    _mailTemplatesChanged = false;
+                }
+                return _emptyMailTemplates;
+            }
+        }
         #endregion
 
 
@@ -283,12 +302,11 @@ namespace MHConfigurator
 
         public List<long> GetUsedPropertyNumbers()
         {
-            List<long> answer = new List<long>();
             using (var uow = new UnitOfWork(DatabasePath))
             {
                 try
                 {
-                    answer = uow.Generated.GetUsedProperties();
+                    var answer = uow.Generated.GetUsedProperties();
                     return answer;
                 }
                 catch (Exception)
@@ -346,7 +364,7 @@ namespace MHConfigurator
                 }
         }
 
-        public List<MailTemplate> GetEmptyMailTemplates()
+        private List<MailTemplate> GetEmptyMailTemplates()
         {
             //todo: Заменить автомаппером с использованием профилей. Или не нужно? Просто другой медод для получения непустых объектов. А при загрузке формы шаблонов перевыгружать то, что передано в конструктор
             using (var uow = new UnitOfWork(DatabasePath))
@@ -458,11 +476,8 @@ namespace MHConfigurator
         {
             using (var uow = new UnitOfWork(DatabasePath))
             {
-                if (uow.TestConnection() && GetEmptyMailTemplates() != null) return true;
-                return false;
+                return (uow.TestDbExist(DatabasePath)) && (GetEmptyMailTemplates() != null);
             }
-
-            
         }
 
         public bool TestConnection(string databasePath)
@@ -472,7 +487,7 @@ namespace MHConfigurator
 
             using (var uow = new UnitOfWork(DatabasePath))
             {
-                if (uow.TestConnection() && GetEmptyMailTemplates() != null)
+                if (uow.TestDbExist(databasePath) && GetEmptyMailTemplates() != null)
                 {
                     DatabasePath = temp;
                     return true;
