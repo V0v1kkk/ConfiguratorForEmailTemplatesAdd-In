@@ -93,7 +93,7 @@
 
             <Button Grid.Row="3"
                     Margin="10"
-                    IsEnabled="False">
+                    Click="{DataBinding OpenInterfaceEditorCommand}">
                 Редактор интерфейса
             </Button>
 

@@ -83,6 +83,7 @@ namespace MHConfigurator.ViewModels
         private readonly IToastPresenter _toastPresenter;
         public ICommand OpenPorpertiesEditorCommand;
         public ICommand OpenTemplatesViewerCommand;
+        public ICommand OpenInterfaceEditorCommand;
         public ICommand CheckConnectionCommand;
         public ICommand OpenDbCommand;
         public ICommand CreateDbCommand;
@@ -150,10 +151,12 @@ namespace MHConfigurator.ViewModels
 
             OpenPorpertiesEditorCommand = new RelayCommand(OpenPorpertiesEditorExecute, ButtonsForWorkWithDbCanBeActive, this);
             OpenTemplatesViewerCommand = new RelayCommand(OpenTemplatesViewerExecute, ButtonsForWorkWithDbCanBeActive, this);
+            OpenInterfaceEditorCommand = new RelayCommand(OpenInterfaceEditorCommandExecute,ButtonsForWorkWithDbCanBeActive,this);
             CheckConnectionCommand = new RelayCommand(CheckConnectionExecute);
             OpenDbCommand = new RelayCommand(OpenDbExecute);
             CreateDbCommand = new RelayCommand(CreateDbExecute);
         }
+
 
         private async void TestConnection()
         {
@@ -211,6 +214,21 @@ namespace MHConfigurator.ViewModels
                 ViewBusy = true;
                 var templatesEditor = GetViewModel<TemplateViewerViewModel>();
                 templatesEditor.Setup();
+                ViewBusy = false;
+                WindowVisibility = Visibility.Collapsed;
+                await templatesEditor.ShowAsync();
+                WindowVisibility = Visibility.Visible;
+                templatesEditor.Dispose();
+            });
+        }
+
+        private async void OpenInterfaceEditorCommandExecute(object obj)
+        {
+            await Task.Factory.StartNew(async () =>
+            {
+                ViewBusyMessage = "Загрузка элементов интерфейса";
+                ViewBusy = true;
+                var templatesEditor = GetViewModel<InterfaceEditorViewModel>();
                 ViewBusy = false;
                 WindowVisibility = Visibility.Collapsed;
                 await templatesEditor.ShowAsync();
@@ -320,58 +338,6 @@ namespace MHConfigurator.ViewModels
                                             "Ожибка подключения БД", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                     });
-
-                    /*
-                    //BGW construction for correctly work Busy control
-                    BackgroundWorker worker = new BackgroundWorker();
-                    worker.DoWork += (o, ea) =>
-                    {
-                        ea.Result = DAL.GetDAL().TestConnection(myDialog.FileName);
-                    };
-                    worker.RunWorkerCompleted += (o, ea) =>
-                    {
-                        ViewBusy = false;
-                        var tryConnectionResult = (bool)ea.Result;
-                        if (tryConnectionResult)
-                        {
-                            Properties.Settings.Default.databasePath = myDialog.FileName;
-                            Properties.Settings.Default.Save();
-                            OnPropertyChanged("CurrentDatabasePath");
-
-                            DAL.GetDAL().DatabasePath = myDialog.FileName;
-                            ConnectionSuccess = true;
-                            DAL.GetDAL().MakeBackUpDb(myDialog.FileName);
-                        }
-                        else
-                        {
-                            MessageBox.Show("Не удалось подключится к указанной БД. Попробуйте выбрать другую БД",
-                                            "Ожибка подключения БД", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    };
-
-                    ViewBusyMessage = "Подключение к БД";
-                    ViewBusy = true;
-                    worker.RunWorkerAsync();
-
-
-                    /*
-                    if (DAL.GetDAL().TestConnection(myDialog.FileName))
-                    {
-                        Properties.Settings.Default.databasePath = myDialog.FileName;
-                        Properties.Settings.Default.Save();
-                        OnPropertyChanged("CurrentDatabasePath");
-
-                        DAL.GetDAL().DatabasePath = myDialog.FileName;
-                        ConnectionSuccess = true;
-                        DAL.GetDAL().MakeBackUpDb(myDialog.FileName);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Не удалось подключится к указанной БД. Попробуйте выбрать другую БД",
-                        "Ожибка подключения БД", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                    */
-
                 }
             }
             catch (FileNotFoundException exception)

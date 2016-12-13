@@ -79,6 +79,8 @@ namespace MHConfigurator
         private bool _mailTemplatesChanged;
 
         private string _databasePath;
+        private List<PanelElement> _panelElements;
+        private bool _panelElementsChanged;
 
         #endregion
 
@@ -137,6 +139,27 @@ namespace MHConfigurator
             }
         }
 
+        public List<PanelElement> PanelElements
+        {
+            get
+            {
+                if (_panelElements == null)
+                {
+                    _panelElements = GetPanelElements();
+                    _panelElementsChanged = false;
+                }
+                else if (_panelElementsChanged)
+                {
+                    _panelElements = GetPanelElements();
+                    _panelElementsChanged = false;
+                }
+                return _panelElements;
+            }
+        }
+
+        
+
+
         public List<long> UsedProperties
         {
             get
@@ -175,6 +198,8 @@ namespace MHConfigurator
             }
         }
 
+
+
         public List<MailTemplate> EmptyMailTemplates
         {
             get
@@ -193,6 +218,51 @@ namespace MHConfigurator
                 return _emptyMailTemplates;
             }
         }
+        #endregion
+
+
+        #region Work with PanelElements
+
+
+        private List<PanelElement> GetPanelElements()
+        {
+            using (var uow = new UnitOfWork(DatabasePath))
+            {
+                List<PanelElement> answer = new List<PanelElement>();
+                try
+                {
+                    foreach (Generated panelElement in uow.Generated.GetAll())
+                    {
+                        if (panelElement.IsMenu)
+                        {
+                            answer.Add(new MenuElement(panelElement.Name,panelElement.ParentName,panelElement.Label,
+                                panelElement.SuperTip,panelElement.ScreenTip,panelElement.Image));
+                        }
+                        else if(panelElement.IsButton)
+                        {
+                            answer.Add(new ButtonElement(panelElement.Name,panelElement.ParentName,panelElement.Label,panelElement.SuperTip,
+                                panelElement.ScreenTip,panelElement.Image,(int?)panelElement.TemplateNO));
+                        }
+                        else if(panelElement.IsGroup)
+                        {
+                            answer.Add(new GroupElement(panelElement.Name,panelElement.ParentName,panelElement.Label));
+                        }
+                        else if(panelElement.IsSeparator)
+                        {
+                            answer.Add(new SeparatorElement(panelElement.Name,panelElement.ParentName));
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    //todo: Залогировать
+                }
+                return PanelElement.CreateTree(answer); //convert flat list to tree
+            }
+        }
+
+
+
         #endregion
 
 

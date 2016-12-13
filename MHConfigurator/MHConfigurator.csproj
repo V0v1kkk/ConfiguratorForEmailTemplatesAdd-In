@@ -99,6 +99,9 @@
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Hardcodet.Wpf.GenericTreeView">
+      <HintPath>..\..\Examples\TreeView\WPF TreeView\bin\Release\Hardcodet.Wpf.GenericTreeView.dll</HintPath>
+    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.5, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.4.9.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
       <Private>True</Private>
@@ -187,6 +190,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdditionalCalsses\PanelElementsTree.cs" />
     <Compile Include="App.Xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -265,6 +269,10 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Resource Include="Images\spannerIcon.ico" />
+    <Resource Include="Images\groupIcon.png" />
+    <Resource Include="Images\menuIcon.png" />
+    <Resource Include="Images\separatorIcon.png" />
+    <Resource Include="Images\buttonIcon.png" />
     <Content Include="x64\SQLite.Interop.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

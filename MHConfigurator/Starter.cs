@@ -19,7 +19,7 @@ namespace MHConfigurator
         {
             return typeof(MainViewModel);
 
-            //return typeof(TemplateViewerViewModel);
+            //return typeof(InterfaceEditorViewModel);
 
 
             //return typeof (MailPropertiesViewModel);
